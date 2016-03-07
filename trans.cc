@@ -80,7 +80,8 @@ objfile_format objfile = {
     {"acs_max_dec", {8, "float", false}},
     {"acs_max_jerk", {8, "float", false}},
     // OBJ PLC Task List Segment
-    {"plc_task_count",{1, "int", false}},
+    {"plc_task_count", {1, "int", false}},
+    {"plc_global_count", {2, "int", false}},
     // OBJ PLC Task Description Segment
     {"tds_name",{16, "str", false}},
     {"tds_priority",{1, "int", false}},
@@ -92,9 +93,11 @@ objfile_format objfile = {
     {"tds_pou_count",{2, "int", false}},
     {"tds_const_count",{2, "int", false}},
     {"tds_global_count",{2, "int", false}},
+    {"tds_refval_count", {2, "int", false}},
     {"tds_inst_count",{4, "int", false}},
     // OBJ PLC Task User-level POU Description Segment
     {"pds_name",{20, "str", false}},
+    {"pds_type", {1, "int", true}},
     {"pds_input_count",{1, "int", false}},
     {"pds_inout_count",{1, "int", false}},
     {"pds_output_count",{1, "int", false}},
@@ -110,6 +113,7 @@ objmacro_format objmacro = {
 	{"BYTE_ORDER_LIT", "1"},
 	{"BYTE_ORDER_BIT", "2"},
 	{"MACH_CORTEX_A8", "1"},
+	// Axis 
 	{"AXIS_TYPE_FINITE", "1"},
 	{"AXIS_TYPE_MODULO", "2"},
 	{"AXIS_INDEPENDENT", "1"},
@@ -117,8 +121,13 @@ objmacro_format objmacro = {
 	{"OPMODE_POS", "1"},
 	{"OPMODE_VEL", "2"},
 	{"OPMODE_TOR", "3"},
+	// task
 	{"TASK_TYPE_SIGNAL", "1"},
 	{"TASK_TYPE_INTERVAL", "2"},
+	// pou 
+	{"POU_TYPE_FUN", "1"},
+	{"POU_TYPE_FB", "2"},
+	{"POU_TYPE_PROG", "3"},
 	// OBJ PLC Task Constant/Global Value Type
 	{"TINT", "1"},
 	{"TUINT", "2"},
@@ -229,6 +238,13 @@ code_gen_table opcode = {
     {"OP_SCALL", {36, create_scall}},
     {"OP_UCALL", {37, create_ABx}},
     {"OP_RET", {38, create_ABx}},
+    // reference data manipulation
+    {"OP_GETFIELD", {39, create_ABC}},
+    {"OP_SETFIELD", {40, create_ABC}},
+    // functional instruction
+    {"OP_TP", {41, create_ABC}},
+    {"OP_TON", {42, create_ABC}},
+    {"OP_TOF", {43, create_ABC}},
     // helper
     {"OP_LDIX", {4, create_DX}},
     {"OP_LDIB", {4, create_DB}},
@@ -279,6 +295,7 @@ std::vector<std::string> split(std::string str,std::string pattern)
 void dump_inst(std::ofstream &outfile, std::vector<std::string> &result) {
 	int temp = opcode[result[1]].creator(result);
 	outfile.write((char*)&temp, 4);
+	std::cout << "instruction" << std::endl;
 }
 
 void dump_value(std::ofstream &outfile, std::vector<std::string> &result) {
@@ -296,12 +313,43 @@ void dump_value(std::ofstream &outfile, std::vector<std::string> &result) {
 		outfile.write((char*)&tmp, 8);
 	} else if(result[1] == "TSTRING") {
 		outfile << (char)4;
+	} else if(result[1] == "S" || result[1] == "A" || result[1] == "FB" ) {
+		outfile << (char)5;
+		unsigned long tmp = std::stoul(result[2]);
+		outfile.write((char*)&tmp, 8);
+	}
+}
+
+void dump_ref_value(std::ofstream &outfile, std::vector<std::string> &result) {
+	std::vector<std::string> new_res{"", "", ""};
+	int temp = std::stoi(result[1]);
+	unsigned long tmp = std::stoul(result[1]);
+	std::cout << tmp << std::endl;
+	outfile.write((char*)&tmp, 2);
+	if(result[0] == "S") {
+		int cnt = 2;
+		for(int i = 0; i < temp; i ++) {
+			new_res[1] = result[cnt++];
+			new_res[2] = result[cnt++];
+			dump_value(outfile, new_res);
+		}
+	} else if(result[0] == "A") {
+		int cnt = 3;
+		for(int i = 0; i < temp; i ++) {
+			new_res[1] = result[2];
+			new_res[2] = result[cnt++];
+			dump_value(outfile, new_res);
+		}
+	} else {
+
 	}
 }
 
 void dump_obj(std::ofstream &outfile, std::vector<std::string> &result) {
-	if(result[0] == "K" || result[0] == "G") {
+	if(result[0] == "K" || result[0] == "G" ) {
     	dump_value(outfile, result);
+	} else if (result[0] == "S" || result[0] == "A" || result[0] == "FB") {
+		dump_ref_value(outfile, result);
     } else if(result[0] == "I") {
     	dump_inst(outfile, result);
     } else {

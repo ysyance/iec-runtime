@@ -39,6 +39,9 @@
 #define do_raload(reg, rai_ch) {setvuint(reg, rai_ch);}
 #define do_rastore(rao, pos, size, reg) {setach(rao, pos, size, (reg).v.value_u);}
 
+#define do_getfield(reg, index, subindex) { reg = task->vref[index.v.value_p].at(subindex.v.value_p);}
+#define do_setfield(reg, index, subindex) { task->vref[index.v.value_p].at(subindex.v.value_p) = reg;}
+
 /* calling stack */
 #define STK     (task->stack)
 #define TOP     (task->stack.top)
@@ -47,6 +50,7 @@
 #define R(i)    (CURR_SF.reg[i])
 #define G(i)    (task->vglobal[i])
 #define K(i)    (task->vconst[i])
+// #define REF(i)  (task->vref).at(i)
 
 /* system-level POU */
 #define SPOU(i) (spou_desc[i].addr)
@@ -160,6 +164,23 @@
     dump_R(B);                    \
     EOL;                          \
 }
+#define dump_getfield() {                                                                 \
+    dump_R(A);                    \
+    fprintf(stderr, " <-- ");     \
+    dump_R(B);                    \
+    fprintf(stderr, "."); \
+    dump_R(C);                    \
+    EOL;   \
+}
+#define dump_setfield() {                                                                 \
+    dump_R(B);                    \
+    fprintf(stderr, ".");         \
+    dump_R(C);                    \
+    fprintf(stderr, " <-- ");     \
+    dump_R(A);                    \
+    EOL;   \
+}
+
 #else
 #define dump_opcode(i)
 #define dump_data(s, i, v)
@@ -177,6 +198,8 @@
 #define dump_ret()
 #define dump_condj(n)
 #define dump_not()
+#define dump_getfield()
+#define dump_setfield();
 #endif
 
 
@@ -235,6 +258,11 @@ static void executor(void *plc_task) {
                 case OP_SCALL:  dump_scall(); do_scall(&R(A), Bx); PC++; break;
                 case OP_UCALL:  dump_ucall(); do_ucall(A, Bx); break;
                 case OP_RET:    dump_ret(); do_ret(A, Bx); break;
+                case OP_GETFIELD: dump_getfield();do_getfield(R(A), R(B), R(C)); PC++; break;
+                case OP_SETFIELD: dump_setfield();do_setfield(R(A), R(B), R(C)); PC++; break;
+                case OP_TP: PC++; break;
+                case OP_TON: PC++; break;
+                case OP_TOF: PC++; break;
                 default: LOGGER_DBG(DFLAG_SHORT, "Unknown OpCode(%d)", opcode); break;
             }
         }

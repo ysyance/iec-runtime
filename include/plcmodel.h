@@ -29,11 +29,13 @@ typedef struct {
     uint16_t pou_count;            /* Program Organization Unit: FUN | FB | PROG */
     uint16_t const_count;          /* number of constant */
     uint16_t global_count;         /* number of global variables */
+    uint16_t refval_count;         /* number of reference variables */
 	uint32_t inst_count;           /* number of instructions(code) */
 } TaskDesc; /* PLC Task Descriptor */
 
 typedef struct {
     char name[MAX_POU_NAME_SIZE]; /* POU name */
+    uint8_t pou_type;             /* POU type, is function, fb or program */
     uint8_t input_count;          /* number of input parameters */
     uint8_t inout_count;          /* number of in-out parameters */
     uint8_t output_count;         /* number of output parameters */
@@ -47,6 +49,7 @@ typedef struct {
     UPOUDesc *pou_desc; /* POU descriptor */
     IValue *vconst;     /* constant pool */
     IValue *vglobal;    /* global variables */
+    Ref_data vref;     /* reference variables */
     Instruction *code;  /* task code(instruction) */
     CStack stack;       /* calling stack(constant capacity) */
     uint32_t pc;        /* program counter(AKA instruction pointer) */
@@ -54,6 +57,7 @@ typedef struct {
 
 typedef struct {
     uint8_t task_count; /* number of plc task */
+    uint16_t tasks_global_count;
     RT_TASK *rt_task;
     RT_TASK_INFO *rt_info;
     PLCTask *plc_task;

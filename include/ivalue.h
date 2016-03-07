@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <vector>
 #include "helper.h"
 #include "logger.h"
 
@@ -11,10 +12,12 @@
 #define TUINT   2
 #define TDOUBLE 3
 #define TSTRING 4
-//#define TREF    4
+#define TREF    5
 
 #define MIN_VTYPE TINT
-#define MAX_VTYPE TSTRING
+// #define MAX_VTYPE TSTRING
+#define MAX_VTYPE TREF
+
 
 /* Internal Basic Type */
 typedef int64_t  IInt;
@@ -33,9 +36,11 @@ typedef struct Value {
         IUInt value_u;
         IDouble value_d;
         IString value_s;
-        //uint16_t value_p; [> reference or pointer value <]
+        uint64_t value_p; //[> reference or pointer value <]
     } v;
 } IValue;
+
+typedef std::vector<std::vector<IValue> > Ref_data;
 
 /*-----------------------------------------------------------------------------
  * Value Helper Function Macro
@@ -195,11 +200,15 @@ typedef struct Value {
                 fprintf(stderr, s " [%f(double)]", vdouble(v)); break;                  \
             case TSTRING:                                                               \
                 fprintf(stderr, s " [%s(length = %d)]", vstrstr(v), vstrlen(v)); break; \
+            case TREF:                                                                  \
+                fprintf(stderr, s " [index=%d(struct)]", vuint(v)); break;             \
             default: fprintf(stderr, "Unknown Value Type(%d)", type(v)); break;         \
         }                                                                               \
     } while(0)
+    #define dump_struct(n) {printf("Struct Value: %d\n", n);}
 #else
     #define dump_value(value)
+    #define dump_struct(n)
 #endif
 
 #endif

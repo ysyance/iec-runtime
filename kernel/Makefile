@@ -8,6 +8,7 @@ SRCDIR := ./libsys
 CC = arm-xilinx-linux-gnueabi-gcc
 CXX = arm-xilinx-linux-gnueabi-g++
 CFLAGS := -std=c++0x
+
 CPPFLAGS += $(CFLAGS) $(addprefix -I,$(INCLUDES))
 
 RM-F := rm -f

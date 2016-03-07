@@ -71,10 +71,15 @@ typedef enum {
     OP_SCALL,
     OP_UCALL,
     OP_RET,
+    OP_GETFIELD,
+    OP_SETFIELD,
+    OP_TP,
+    OP_TON,
+    OP_TOF,
 } OpCode;
 
 #define MIN_OPCODE OP_GLOAD
-#define MAX_OPCODE OP_RET
+#define MAX_OPCODE OP_TOF
 /*-----------------------------------------------------------------------------
  * Instructoin Decoder Macro
  * Note: decoder won't change original instruction!

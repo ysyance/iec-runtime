@@ -31,7 +31,7 @@ ServoConfig *sv_conf;
 TaskList plc_task;
 
 pid_t io_pid, sv_pid;
-char objname[MAX_OBJNAME] = "exe.obj";
+char objname[MAX_OBJNAME] = "exec.obj";
 
 void sig_handler(int signo) {
     LOGGER_DBG(DFLAG_SHORT, "Kernel Received Signal: %d", (int)signo);
