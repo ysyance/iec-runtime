@@ -82,8 +82,8 @@
 }
 #define do_ret(caller_input_base, called_id) {                         \
     /* caller_sf, output_base, called_sf, output_base, outpouc */      \
-    sf_regcpy(PREV_SF, caller_input_base+UPOU_INPUTC(called_id),       \
-            CURR_SF, 0+UPOU_INPUTC(called_id), UPOU_REGOC(called_id)); \
+    sf_regcpy(PREV_SF, CURR_SF.retreg,       \
+            CURR_SF, 0+UPOU_INPUTC(CURR_SF.pou), UPOU_REGOC(CURR_SF.pou)); \
     PC = CURR_SF.ret;                                                  \
     cs_pop(STK);                                                       \
 }
@@ -258,8 +258,8 @@ static void executor(void *plc_task) {
                 case OP_SCALL:  dump_scall(); do_scall(&R(A), Bx); PC++; break;
                 case OP_UCALL:  dump_ucall(); do_ucall(A, Bx); break;
                 case OP_RET:    dump_ret(); do_ret(A, Bx); break;
-                case OP_GETFIELD: dump_getfield();do_getfield(R(A), R(B), R(C)); PC++; break;
-                case OP_SETFIELD: dump_setfield();do_setfield(R(A), R(B), R(C)); PC++; break;
+                case OP_GETFIELD: dump_getfield(); do_getfield(R(A), R(B), R(C)); PC++; break;
+                case OP_SETFIELD: dump_setfield(); do_setfield(R(A), R(B), R(C)); PC++; break;
                 case OP_TP: PC++; break;
                 case OP_TON: PC++; break;
                 case OP_TOF: PC++; break;

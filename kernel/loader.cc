@@ -161,6 +161,7 @@ static int load_pou_desc(FILE *fp, UPOUDesc *pou_desc) {
     /* ORDER SENSITIVE */
     loadvs(fp, pou_desc->name, MAX_POU_NAME_SIZE);
     loadv(fp, &pou_desc->pou_type);
+    loadv(fp, &pou_desc->pou_instance);
     loadv(fp, &pou_desc->input_count);
     loadv(fp, &pou_desc->inout_count);
     loadv(fp, &pou_desc->output_count);

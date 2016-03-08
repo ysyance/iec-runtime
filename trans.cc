@@ -98,6 +98,7 @@ objfile_format objfile = {
     // OBJ PLC Task User-level POU Description Segment
     {"pds_name",{20, "str", false}},
     {"pds_type", {1, "int", true}},
+    {"pds_instance", {4, "int", false}},
     {"pds_input_count",{1, "int", false}},
     {"pds_inout_count",{1, "int", false}},
     {"pds_output_count",{1, "int", false}},
@@ -341,7 +342,12 @@ void dump_ref_value(std::ofstream &outfile, std::vector<std::string> &result) {
 			dump_value(outfile, new_res);
 		}
 	} else {
-
+		int cnt = 2;
+		for(int i = 0; i < temp; i ++) {
+			new_res[1] = result[cnt++];
+			new_res[2] = result[cnt++];
+			dump_value(outfile, new_res);
+		}
 	}
 }
 
@@ -394,7 +400,9 @@ int main(int argc, const char* argv[]) {
 		}
 		std::cout << std::endl;
 #endif
-
+		if((result.size() > 0) && result[0] == "EOF") {
+			break;
+		}
 		if((result.size() > 0) && (result[0] != "#")) {
 			dump_obj(outfile, result);
 		}

@@ -7,6 +7,7 @@
 typedef struct {
     uint16_t pou;   /* index of current pou descriptors */
     uint32_t ret; /* return address(AKA index of instructions) */
+    uint8_t retreg;
     IValue *reg;  /* register group base address */
 } SFrame; /* Stack Frame */
 
@@ -19,6 +20,7 @@ typedef struct {
 #define sf_init(sf, pou_id, ret_addr, regc) { \
     (sf).pou = pou_id;                          \
     (sf).ret = ret_addr;                        \
+    (sf).retreg = 0;                        \
     (sf).reg = new IValue[regc];              \
 }
 /* sf1.reg[base1 ... base1+count] <-- sf2.reg[base2 ... base1+count] */
@@ -26,6 +28,7 @@ typedef struct {
     for (int i = 0; i < count; i++) {              \
         (sf1).reg[base1+i] = (sf2).reg[base2+i];   \
     }                                              \
+    (sf1).retreg = base2;                          \       
 }
 /* premise: stack capacity is enough */
 #define cs_push(stk, sf) {      \

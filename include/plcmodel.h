@@ -36,6 +36,7 @@ typedef struct {
 typedef struct {
     char name[MAX_POU_NAME_SIZE]; /* POU name */
     uint8_t pou_type;             /* POU type, is function, fb or program */
+    uint32_t pou_instance;        /* POU instance for FB */
     uint8_t input_count;          /* number of input parameters */
     uint8_t inout_count;          /* number of in-out parameters */
     uint8_t output_count;         /* number of output parameters */
