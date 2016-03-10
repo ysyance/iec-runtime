@@ -1,0 +1,120 @@
+header_magic MAGIC
+header_type    SYS_TYPE_32
+header_order   BYTE_ORDER_LIT
+header_version 1
+header_machine MACH_CORTEX_A8
+
+iocs_update_interval 8000000
+iocs_ldi_count 1
+iocs_ldo_count 1
+iocs_lai_count 1
+iocs_lao_count 1
+iocs_rdi_count 0
+iocs_rdo_count 0
+iocs_rai_count 0
+iocs_rao_count 0
+
+scs_axis_count 1
+scs_update_interval 8000000
+
+
+acs_name     axis1
+acs_id       1
+acs_type     AXIS_TYPE_FINITE
+acs_combined AXIS_INDEPENDENT
+acs_opmode   OPMODE_POS
+acs_min_pos  0.0
+acs_max_pos  180.0
+acs_max_vel  100.0
+acs_max_acc  20.0
+acs_max_dec  20.0
+acs_max_jerk 10.0
+
+plc_task_count 1
+plc_global_count 0
+
+tds_name         task1
+tds_priority     80
+tds_type         TASK_TYPE_INTERVAL
+tds_signal       0
+tds_interval     100000000
+tds_sp_size      256
+tds_cs_size      4
+tds_pou_count    3
+tds_const_count  5
+tds_global_count 1
+tds_refval_count 8
+tds_inst_count   18
+
+pds_name         main
+pds_type         POU_TYPE_PROG
+pds_instance     0
+pds_input_count  0
+pds_inout_count  0
+pds_output_count 0
+pds_local_count  10
+pds_entry        0
+
+pds_name         add
+pds_type         POU_TYPE_FUN
+pds_instance     0
+pds_input_count  2
+pds_inout_count  0
+pds_output_count 1
+pds_local_count  0
+pds_entry        13
+
+pds_name         add2
+pds_type         POU_TYPE_FB
+pds_instance     7
+pds_input_count  2
+pds_inout_count  0
+pds_output_count 1
+pds_local_count  1
+pds_entry        15
+
+K TUINT 0
+K TUINT 1
+K TDOUBLE 15.3
+K TUINT 2
+K TUINT 7
+
+G TINT 0
+
+S 3 TINT 10 S 1 TUINT 5
+S 2 TUINT 3 TDOUBLE 3.4
+S 2 TINT 1 TINT 4
+S 2 TINT 2 TINT 5
+S 2 TINT 10 TINT 22
+
+A 5 TINT 0 1 2 3 4
+A 3 S 2 3 4
+
+FB 4 TINT 0 TINT 0 TINT 0  TINT 10
+
+
+I OP_KLOAD 0 0
+I OP_KLOAD 1 1
+I OP_GETFIELD 2 0 1
+I OP_GETFIELD 3 2 1
+I OP_KLOAD 5 2 0
+I OP_MOV 4 3 0
+I OP_UCALL 4 1
+I OP_MOV 6 4 0
+I OP_UCALL 4 2
+I OP_KLOAD 7 3
+I OP_KLOAD 8 4
+I OP_GETFIELD 9 8 7
+
+I OP_HALT 0 0 0 # Halt
+
+I OP_ADD 2 0 1 
+I OP_RET 0 1
+
+I OP_ADD 2 0 1
+I OP_ADD 2 2 3
+I OP_RET 0 2
+
+
+
+EOF
