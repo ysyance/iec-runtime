@@ -32,6 +32,7 @@ acs_max_jerk 10.0
 
 plc_task_count 1
 plc_global_count 0
+plc_timer_count  1
 
 tds_name         task1
 tds_priority     80

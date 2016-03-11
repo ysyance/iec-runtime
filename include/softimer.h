@@ -27,10 +27,11 @@ typedef struct{
 
 
 
-softimer_manager_t timer_manager;
+extern softimer_manager_t timer_manager;
 
-RT_ALARM alarm_desc;
+extern RT_ALARM alarm_desc;
 
+extern RT_TASK timer_task_desc;
 
 void softimer_server(void* cookie);
 

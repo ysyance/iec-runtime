@@ -28,17 +28,30 @@ typedef struct {
     for (int i = 0; i < count; i++) {              \
         (sf1).reg[base1+i] = (sf2).reg[base2+i];   \
     }                                              \
-    (sf1).retreg = base2;                          \       
+    (sf1).retreg = base2;                          \
 }
 /* premise: stack capacity is enough */
 #define cs_push(stk, sf) {      \
-    (stk).base[(stk).top] = sf; \
-    (stk).top++;                \
+    (stk).base[(stk).top] = sf;  \
+    (stk).top++;                 \
 }
 #define cs_pop(stk) {                     \
-    delete[] (stk).base[(stk).top-1].reg; \
-    (stk).top--;                          \
+    delete[] (stk).base[(stk).top - 1].reg; \
+    (stk).top--;                       \
 }
+
+#define fb_load(sf, fb_instance) { \
+    for(int i = 0; i < fb_instance.size(); i ++){            \
+        (sf).reg[i] = fb_instance[i];      \
+    }                                           \
+}       
+
+#define fb_store(fb_instance, sf) {      \
+    for(int i = 0; i < fb_instance.size(); i ++) {           \
+        fb_instance[i] = (sf).reg[i];           \
+    }                                           \
+}                                        
+
 int cs_init(CStack *stk, uint16_t cap);
 //int cs_push(CStack *stk, SFrame *frame);
 //int cs_pop(CStack *stk);

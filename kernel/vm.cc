@@ -4,6 +4,7 @@
 #include "opcode.h"
 #include "libsys.h"
 #include "logger.h"
+#include "softimer.h"
 
 
 /* program counter */
@@ -62,9 +63,11 @@
 #define UPOU_INOUTC(i)  (UPOU_DESC(i).inout_count)
 #define UPOU_OUTPUTC(i) (UPOU_DESC(i).output_count)
 #define UPOU_LOCALC(i)  (UPOU_DESC(i).local_count)
+#define UPOU_TYPE(i)    (UPOU_DESC(i).pou_type)
+#define UPOU_INSTANCE(i) (UPOU_DESC(i).pou_instance)
 #define UPOU_REGIC(i)   (UPOU_INPUTC(i) + UPOU_INOUTC(i))
 #define UPOU_REGOC(i)   (UPOU_INOUTC(i) + UPOU_OUTPUTC(i))
-#define UPOU_REGC(i)    (UPOU_REGIC(i) + UPOU_REGOC(i))
+#define UPOU_REGC(i)    (UPOU_INPUTC(i) + UPOU_INOUTC(i) + UPOU_OUTPUTC(i) + UPOU_LOCALC(i))
 #define UPOU_ENTRY(i)   (UPOU_DESC(i).entry)
 
 /**
@@ -75,17 +78,58 @@
     SFrame called_sf;                                                           \
     /* sframe, pou_id, ret_addr, regs_needed */                                 \
     sf_init(called_sf, called_id, PC+1, UPOU_REGC(called_id));                  \
+    if(UPOU_TYPE(called_id) == 2) {                                             \
+        fb_load(called_sf, task->vref[UPOU_INSTANCE(called_id)]);               \
+    }                                                                           \
     /* called_sf, input_base, caller_sf, input_base, inputc */                  \
     sf_regcpy(called_sf, 0, CURR_SF, caller_input_base, UPOU_REGIC(called_id)); \
     cs_push(STK, called_sf);                                                    \
     PC = UPOU_ENTRY(called_id);                                                 \
 }
-#define do_ret(caller_input_base, called_id) {                         \
-    /* caller_sf, output_base, called_sf, output_base, outpouc */      \
-    sf_regcpy(PREV_SF, CURR_SF.retreg,       \
-            CURR_SF, 0+UPOU_INPUTC(CURR_SF.pou), UPOU_REGOC(CURR_SF.pou)); \
-    PC = CURR_SF.ret;                                                  \
-    cs_pop(STK);                                                       \
+#define do_ret(caller_input_base, called_id) {                                  \
+    if(UPOU_TYPE(CURR_SF.pou) == 2) {                                           \
+        fb_store(task->vref[UPOU_INSTANCE(CURR_SF.pou)], CURR_SF);              \
+    } else {                                                                    \
+        /* caller_sf, output_base, called_sf, output_base, outpouc */           \
+        sf_regcpy(PREV_SF, CURR_SF.retreg,                                      \
+                CURR_SF, 0+UPOU_INPUTC(CURR_SF.pou), UPOU_REGOC(CURR_SF.pou));  \
+    }                                                                           \
+    PC = CURR_SF.ret;                                                           \
+    cs_pop(STK);                                                                \
+}
+
+
+#define do_tp(timer_index, timer_instance_index) {                              \
+    if((task->vref[timer_instance_index][4].v.value_u ==0) && (task->vref[timer_instance_index][0].v.value_u != 0)){ \
+        timer_manager.timer_list[timer_index].startflag = true;                 \
+    }                                                                           \
+    if((task->vref[timer_instance_index][0].v.value_u == 0) && timer_manager.timer_list[timer_index].arriveflag == true){  \
+        timer_manager.timer_list[timer_index].startflag = false;                \
+    }                                                                           \
+    timer_manager.timer_list[timer_index].target_count = task->vref[timer_instance_index][2].v.value_u; \
+    task->vref[timer_instance_index][3].v.value_u = timer_manager.timer_list[timer_index].cur_count;    \
+    task->vref[timer_instance_index][1].v.value_u = !timer_manager.timer_list[timer_index].arriveflag;  \
+    task->vref[timer_instance_index][4].v.value_u = task->vref[timer_instance_index][0].v.value_u;      \
+}
+#define do_ton(timer_index, timer_instance_index) {                             \
+    if(task->vref[timer_instance_index][0].v.value_u != 0){                     \
+        timer_manager.timer_list[timer_index].startflag = true;                 \
+    } else {                                                                    \
+        timer_manager.timer_list[timer_index].startflag = false;                \
+    }                                                                           \
+    timer_manager.timer_list[timer_index].target_count = task->vref[timer_instance_index][2].v.value_u; \
+    task->vref[timer_instance_index][3].v.value_u = timer_manager.timer_list[timer_index].cur_count;    \
+    task->vref[timer_instance_index][1].v.value_u = timer_manager.timer_list[timer_index].arriveflag;   \
+}
+#define do_tof(timer_index, timer_instance_index) {                             \
+    if(task->vref[timer_instance_index][0].v.value_u == 0){                     \
+        timer_manager.timer_list[timer_index].startflag = true;                 \
+    } else {                                                                    \
+        timer_manager.timer_list[timer_index].startflag = false;                \
+    }                                                                           \
+    timer_manager.timer_list[timer_index].target_count = task->vref[timer_instance_index][2].v.value_u; \
+    task->vref[timer_instance_index][3].v.value_u = timer_manager.timer_list[timer_index].cur_count;    \
+    task->vref[timer_instance_index][1].v.value_u = !timer_manager.timer_list[timer_index].arriveflag;  \
 }
 
 #if LEVEL_DBG <= LOGGER_LEVEL
@@ -144,7 +188,7 @@
     fprintf(stderr, "Calling system-level POU(%s)\n", spou_desc[Bx].name); \
 }
 #define dump_ucall() {                                                       \
-    dump_opcode(SCALL);                                                      \
+    dump_opcode(UCALL);                                                      \
     fprintf(stderr, "Calling user-level POU(%s) [entry: instruction(%d)]\n", \
             UPOU_DESC(Bx).name, UPOU_ENTRY(Bx));                             \
 }
@@ -153,34 +197,52 @@
     fprintf(stderr, "Returning from user-level POU(%s) [return: instruction(%d)]\n", \
             UPOU_DESC(Bx).name, CURR_SF.ret);                                        \
 }
-#define dump_condj(n) {                                                                 \
-    dump_opcode(CONDJ);                                                                \
-    fprintf(stderr, "Jump over next %d instructions\n", n); \
+#define dump_condj(n) {                                                              \
+    dump_opcode(CONDJ);                                                              \
+    fprintf(stderr, "Jump over next %d instructions\n", n);                          \
 }
-#define dump_not() {                                                                 \
-    dump_opcode(NOT);                                                                \
+#define dump_not() {              \
+    dump_opcode(NOT);             \
     dump_R(A);                    \
-    fprintf(stderr, " <-- ~");     \
+    fprintf(stderr, " <-- ~");    \
     dump_R(B);                    \
     EOL;                          \
 }
-#define dump_getfield() {                                                                 \
+#define dump_getfield() {         \
+    dump_opcode(GETFIELD);        \
     dump_R(A);                    \
     fprintf(stderr, " <-- ");     \
     dump_R(B);                    \
-    fprintf(stderr, "."); \
+    fprintf(stderr, ".");         \
     dump_R(C);                    \
-    EOL;   \
+    EOL;                          \
 }
-#define dump_setfield() {                                                                 \
+#define dump_setfield() {         \
+    dump_opcode(SETFIELD);        \
     dump_R(B);                    \
     fprintf(stderr, ".");         \
     dump_R(C);                    \
     fprintf(stderr, " <-- ");     \
     dump_R(A);                    \
-    EOL;   \
+    EOL;                          \
 }
 
+#define dump_tp(timer_index, timer_instance_index) {                                    \
+    dump_opcode(OP_TP);                                                                 \
+    fprintf(stderr, "Timer:%d -> Instance:%d\n", timer_index, timer_instance_index);    \
+    EOL;                                                                                \
+}
+
+#define dump_ton(timer_index, timer_instance_index) {                                   \
+    dump_opcode(OP_TON);                                                                \
+    fprintf(stderr, "Timer:%d -> Instance:%d\n", timer_index, timer_instance_index);    \
+    EOL;                                                                                \
+}
+#define dump_tof(timer_index, timer_instance_index) {                                   \
+    dump_opcode(OP_TOF);                                                                \
+    fprintf(stderr, "Timer:%d -> Instance:%d\n", timer_index, timer_instance_index);    \
+    EOL;                                                                                \
+}
 #else
 #define dump_opcode(i)
 #define dump_data(s, i, v)
@@ -199,7 +261,10 @@
 #define dump_condj(n)
 #define dump_not()
 #define dump_getfield()
-#define dump_setfield();
+#define dump_setfield()
+#define dump_tp()
+#define dump_ton()
+#define dump_tof()
 #endif
 
 
@@ -258,11 +323,11 @@ static void executor(void *plc_task) {
                 case OP_SCALL:  dump_scall(); do_scall(&R(A), Bx); PC++; break;
                 case OP_UCALL:  dump_ucall(); do_ucall(A, Bx); break;
                 case OP_RET:    dump_ret(); do_ret(A, Bx); break;
-                case OP_GETFIELD: dump_getfield(); do_getfield(R(A), R(B), R(C)); PC++; break;
-                case OP_SETFIELD: dump_setfield(); do_setfield(R(A), R(B), R(C)); PC++; break;
-                case OP_TP: PC++; break;
-                case OP_TON: PC++; break;
-                case OP_TOF: PC++; break;
+                case OP_GETFIELD: do_getfield(R(A), R(B), R(C)); dump_getfield(); PC++; break;
+                case OP_SETFIELD: do_setfield(R(A), R(B), R(C)); dump_setfield(); PC++; break;
+                case OP_TP: dump_tp(A, Bx); do_tp(A, Bx); PC++; break;
+                case OP_TON: dump_ton(A, Bx); do_ton(A, Bx); PC++; break;
+                case OP_TOF: dump_tof(A, Bx); do_tof(A, Bx); PC++; break;
                 default: LOGGER_DBG(DFLAG_SHORT, "Unknown OpCode(%d)", opcode); break;
             }
         }
@@ -277,7 +342,10 @@ static void executor(void *plc_task) {
 #define TASK_DESC(i) (TASK_LIST->plc_task[i].task_desc)
 #define TASK_NAME(i) (TASK_DESC(i).name)
 #define TASK_PRIO(i) (TASK_DESC(i).priority)
+
+
 void plc_task_init(TaskList *task_list) {
+    plc_timer_task_init(task_list);
     for (int i = 0; i < TASK_COUNT; ++i) {
         if (rt_task_create(&task_list->rt_task[i], TASK_NAME(i), 0, TASK_PRIO(i), 0) < 0) {
             LOGGER_ERR(E_PLCTASK_CREATE, "(%s)", TASK_NAME(i));
@@ -285,6 +353,7 @@ void plc_task_init(TaskList *task_list) {
     }
 }
 void plc_task_start(TaskList *task_list) {
+    plc_timer_task_start(task_list);
     for (int i = 0; i < TASK_COUNT; ++i) {
         printf("task_list\n");
         if (rt_task_start(&task_list->rt_task[i], &executor, (void *)&task_list->plc_task[i]) < 0) {
@@ -316,3 +385,25 @@ void plc_task_delete(TaskList *task_list) {
     }
 }
 
+void plc_timer_task_init(TaskList *task_list){
+    timer_manager.timer_count = task_list->timer_count;
+
+    if(task_list->timer_count > 0){
+        int err = 0;
+        err = rt_alarm_create(&alarm_desc,"TickTimer");
+        if(!err){
+            err = rt_task_create(&timer_task_desc, "TimerServer", 4, 96, 0);
+        }
+        if(!err){
+            for(int i = 0; i < task_list->timer_count; i ++){
+                timer_manager.timer_list.push_back({0, 0, false, false});
+            }
+        }
+    }
+}
+
+void plc_timer_task_start(TaskList *task_list){
+    int err = rt_alarm_start(&alarm_desc, 500000, 1000000);
+    if (!err)
+        rt_task_start(&timer_task_desc, &softimer_server, NULL);
+}

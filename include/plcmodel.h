@@ -50,18 +50,19 @@ typedef struct {
     UPOUDesc *pou_desc; /* POU descriptor */
     IValue *vconst;     /* constant pool */
     IValue *vglobal;    /* global variables */
-    Ref_data vref;     /* reference variables */
+    Ref_data vref;      /* reference variables */
     Instruction *code;  /* task code(instruction) */
     CStack stack;       /* calling stack(constant capacity) */
     uint32_t pc;        /* program counter(AKA instruction pointer) */
-} PLCTask;
+} PLCTask; /* softplc task model */
 
 typedef struct {
-    uint8_t task_count; /* number of plc task */
-    uint16_t tasks_global_count;
+    uint8_t task_count;             /* number of plc task */
+    uint16_t tasks_global_count;    /* number of global variables between tasks */
+    uint16_t timer_count;           /* number of timers in the rumtime system */
     RT_TASK *rt_task;
     RT_TASK_INFO *rt_info;
     PLCTask *plc_task;
-} TaskList;
+} TaskList; /* softplc task model */
 
 #endif

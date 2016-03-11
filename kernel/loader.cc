@@ -4,6 +4,7 @@
 #include "sysenv.h"
 #include "istring.h"
 #include "logger.h"
+#include "softimer.h"
 
 /*-----------------------------------------------------------------------------
  * Helper Funciton Macros
@@ -289,11 +290,14 @@ static int load_task_list(FILE *fp, TaskList *task_list) {
     loadv(fp, &task_list->task_count);
     loadv(fp, &task_list->tasks_global_count);
     verify(MAX_TASK_COUNT < task_list->task_count, E_TASK_COUNT, "");
+
+    loadv(fp, &task_list->timer_count);
+        
     task_list->rt_task = new RT_TASK[task_list->task_count];
     task_list->rt_info = new RT_TASK_INFO[task_list->task_count];
     task_list->plc_task = new PLCTask[task_list->task_count];
     verify(task_list->rt_task == NULL || task_list->plc_task == NULL, E_OOM, "loading plc task");
-    LOGGER_DBG(DFLAG_LONG, "PLCList:\n .task_count = %d\n .tasks_global_count = %d\n ", task_list->task_count, task_list->tasks_global_count);
+    LOGGER_DBG(DFLAG_LONG, "PLCList:\n .task_count = %d\n .tasks_global_count = %d\n .timer_count = %d\n ", task_list->task_count, task_list->tasks_global_count, task_list->timer_count);
     for (int i = 0; i < task_list->task_count; i++) {
         if (load_plc_task(fp, &task_list->plc_task[i]) < 0) {
             delete[] task_list->rt_task;
