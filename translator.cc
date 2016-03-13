@@ -244,9 +244,9 @@ code_gen_table opcode = {
     {"OP_GETFIELD", {39, create_ABC}},
     {"OP_SETFIELD", {40, create_ABC}},
     // functional instruction
-    {"OP_TP", {41, create_ABC}},
-    {"OP_TON", {42, create_ABC}},
-    {"OP_TOF", {43, create_ABC}},
+    {"OP_TP", {41, create_ABx}},
+    {"OP_TON", {42, create_ABx}},
+    {"OP_TOF", {43, create_ABx}},
     // helper
     {"OP_LDIX", {4, create_DX}},
     {"OP_LDIB", {4, create_DB}},

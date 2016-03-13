@@ -229,18 +229,18 @@
 
 #define dump_tp(timer_index, timer_instance_index) {                                    \
     dump_opcode(OP_TP);                                                                 \
-    fprintf(stderr, "Timer:%d -> Instance:%d\n", timer_index, timer_instance_index);    \
+    fprintf(stderr, "Timer:%d -> Instance:%d", timer_index, timer_instance_index);    \
     EOL;                                                                                \
 }
 
 #define dump_ton(timer_index, timer_instance_index) {                                   \
     dump_opcode(OP_TON);                                                                \
-    fprintf(stderr, "Timer:%d -> Instance:%d\n", timer_index, timer_instance_index);    \
+    fprintf(stderr, "Timer:%d -> Instance:%d", timer_index, timer_instance_index);    \
     EOL;                                                                                \
 }
 #define dump_tof(timer_index, timer_instance_index) {                                   \
     dump_opcode(OP_TOF);                                                                \
-    fprintf(stderr, "Timer:%d -> Instance:%d\n", timer_index, timer_instance_index);    \
+    fprintf(stderr, "Timer:%d -> Instance:%d", timer_index, timer_instance_index);    \
     EOL;                                                                                \
 }
 #else
@@ -403,7 +403,7 @@ void plc_timer_task_init(TaskList *task_list){
 }
 
 void plc_timer_task_start(TaskList *task_list){
-    int err = rt_alarm_start(&alarm_desc, 500000, 1000000);
+    int err = rt_alarm_start(&alarm_desc, 50000, 1000000);
     if (!err)
         rt_task_start(&timer_task_desc, &softimer_server, NULL);
 }

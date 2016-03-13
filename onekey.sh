@@ -2,7 +2,7 @@
 
 EXE=./iec-runtime\ ./io-task\ ./sv-task
 NFSDIR=/home/mynfs/iec-runtime/
-TESTDIR=./test/
+TESTDIR=./sample
 GENOBJ=./translator.exe
 
 
@@ -11,7 +11,8 @@ make rebuild
 # make
 # Step2: generate obj file
 # ${GENOBJ} "$1" < "$1".test
-${GENOBJ} ./sample/"$1".test
+g++ translator.cc -std=c++11 -o translator.exe
+${GENOBJ} ${TESTDIR}/"$1".test
 # Step3: move iec-runtime & obj file to NFS directory
 mv ${EXE} ${NFSDIR}
 # mv "$1" exec.obj

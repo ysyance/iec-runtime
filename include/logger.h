@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-#define FOR_DEBUG
+// #define FOR_DEBUG 
 
 #define LEVEL_OFF 0
 #define LEVEL_ERR 1
