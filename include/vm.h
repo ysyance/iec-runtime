@@ -12,4 +12,10 @@ void plc_task_resume(TaskList *task_list);
 void plc_task_delete(TaskList *task_list);
 void plc_timer_task_init(TaskList *task_list);
 void plc_timer_task_start(TaskList *task_list);
+void plc_comanager_task_init(TaskList *task_list);
+void plc_comanager_task_start(TaskList *task_list);
+
+
+
+
 #endif

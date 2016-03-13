@@ -5,6 +5,7 @@
 #include "libsys.h"
 #include "logger.h"
 #include "softimer.h"
+#include "comanager.h"
 
 
 /* program counter */
@@ -267,19 +268,32 @@
 #define dump_tof()
 #endif
 
-
+RT_EVENT comm_event_desc;
 RT_HEAP g_ioconf_heap;
 IOConfig *g_ioconf;
 IOMem g_ioshm;
 static void executor(void *plc_task) {
     PLCTask *task = (PLCTask *)plc_task;
-    rt_task_set_periodic(NULL, TM_NOW, task->task_desc.interval);
+    uint8_t temp_task_type = task->task_desc.type;
+    unsigned long signal_wait_mask = 0;
+    unsigned long mask_ret;
+    if(temp_task_type == 1){
+        signal_wait_mask = 1 << task->task_index;
+        rt_event_bind(&comm_event_desc, Event_Flag_Name, TM_INFINITE);
+    } else {
+        rt_task_set_periodic(NULL, TM_NOW, task->task_desc.interval);
+    }
     io_conf_bind(&g_ioconf_heap, &g_ioconf);
     io_mem_bind(&g_ioshm, g_ioconf);
     IOMem iomem;
     io_mem_create(&iomem, g_ioconf, M_LOCAL);
     while (1) {
-        rt_task_wait_period(NULL);
+        if(temp_task_type == 1){
+            rt_event_clear(&comm_event_desc, signal_wait_mask, &mask_ret);
+            rt_event_wait(&comm_event_desc, signal_wait_mask, &mask_ret, EV_ALL, TM_INFINITE);
+        } else {
+            rt_task_wait_period(NULL);
+        }
         //TODO ADD LOCK!?
         io_mem_cpy(&iomem, &g_ioshm, g_ioconf);
         for (PC = 0; PC < EOC; ) {
@@ -346,6 +360,7 @@ static void executor(void *plc_task) {
 
 void plc_task_init(TaskList *task_list) {
     plc_timer_task_init(task_list);
+    plc_comanager_task_init(task_list);
     for (int i = 0; i < TASK_COUNT; ++i) {
         if (rt_task_create(&task_list->rt_task[i], TASK_NAME(i), 0, TASK_PRIO(i), 0) < 0) {
             LOGGER_ERR(E_PLCTASK_CREATE, "(%s)", TASK_NAME(i));
@@ -354,6 +369,7 @@ void plc_task_init(TaskList *task_list) {
 }
 void plc_task_start(TaskList *task_list) {
     plc_timer_task_start(task_list);
+    plc_comanager_task_start(task_list);
     for (int i = 0; i < TASK_COUNT; ++i) {
         printf("task_list\n");
         if (rt_task_start(&task_list->rt_task[i], &executor, (void *)&task_list->plc_task[i]) < 0) {
@@ -403,7 +419,21 @@ void plc_timer_task_init(TaskList *task_list){
 }
 
 void plc_timer_task_start(TaskList *task_list){
-    int err = rt_alarm_start(&alarm_desc, 50000, 1000000);
-    if (!err)
-        rt_task_start(&timer_task_desc, &softimer_server, NULL);
+    if(task_list->timer_count > 0){
+        int err = rt_alarm_start(&alarm_desc, 50000, 1000000);
+        if (!err)
+            rt_task_start(&timer_task_desc, &softimer_server, NULL);
+    }
+}
+
+void plc_comanager_task_init(TaskList *task_list){
+    if(task_list->signal_set.count > 0){
+        int err = rt_task_create(&communicate_task_desc, "CommuincateServer", 4, 95, 0);
+    }
+}
+
+void plc_comanager_task_start(TaskList *task_list){
+    if(task_list->signal_set.count > 0){
+        int err = rt_task_start(&communicate_task_desc, &communicate_server, NULL);
+    }
 }

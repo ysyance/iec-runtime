@@ -87,7 +87,7 @@ objfile_format objfile = {
     {"tds_name",{16, "str", false}},
     {"tds_priority",{1, "int", false}},
     {"tds_type",{1, "int", true}},
-    {"tds_signal",{1, "int", false}},
+    {"tds_signal",{2, "int", false}},
     {"tds_interval",{4, "int", false}},
     {"tds_sp_size",{4, "int", false}},
     {"tds_cs_size",{2, "int", false}},
@@ -353,7 +353,7 @@ void dump_ref_value(std::ofstream &outfile, std::vector<std::string> &result) {
 }
 
 void dump_obj(std::ofstream &outfile, std::vector<std::string> &result) {
-	if(result[0] == "K" || result[0] == "G" ) {
+	if(result[0] == "K" || result[0] == "G" || result[0] == "PG") {
     	dump_value(outfile, result);
 	} else if (result[0] == "S" || result[0] == "A" || result[0] == "FB") {
 		dump_ref_value(outfile, result);

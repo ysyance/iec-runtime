@@ -149,6 +149,7 @@ static int load_task_desc(FILE *fp, TaskDesc *task_desc) {
     verify(MAX_TASK_POU_COUNT < task_desc->pou_count, E_TASK_POU_COUNT, "");
     verify(MAX_TASK_CONST_COUNT < task_desc->const_count, E_TASK_CONST_COUNT, "");
     verify(MAX_TASK_GLOBAL_COUNT < task_desc->global_count, E_TASK_GLOBAL_COUNT, "");
+
     LOGGER_DBG(DFLAG_SHORT, "TaskDesc:\n .name = %s\n .priority = %d\n .type = %d\n .signal = %d\n .interval = %d\n .sp_size = %d\n"
         " .cs_size = %d\n .pou_count = %d\n .const_count = %d\n .global_count = %d\n .refval_count = %d\n .inst_count = %d",
         task_desc->name, task_desc->priority, task_desc->type, task_desc->signal, task_desc->interval, task_desc->sp_size,
@@ -214,6 +215,7 @@ static int load_plc_task(FILE *fp, PLCTask *task) {
     assert(task != NULL);
 
     verify(load_task_desc(fp, &task->task_desc) < 0, E_LOAD_TASK_DESC, "");
+
     verify(sp_init(&task->strpool, task->task_desc.sp_size) < 0, E_SP_INIT, ""); /* MUST initialize before loading constant/global */
     task->pou_desc = new UPOUDesc[task->task_desc.pou_count];
     task->vconst = new IValue[task->task_desc.const_count];
@@ -292,6 +294,14 @@ static int load_task_list(FILE *fp, TaskList *task_list) {
     verify(MAX_TASK_COUNT < task_list->task_count, E_TASK_COUNT, "");
 
     loadv(fp, &task_list->timer_count);
+
+    task_list->plcglobal = new IValue[task_list->tasks_global_count];
+    for (int i = 0; i < task_list->tasks_global_count; i++) {
+        if (load_value(fp, &task_list->plcglobal[i], NULL) < 0) {
+            delete[] task_list->plcglobal;
+            // LOGGER_ERR(E_LOAD_TASK_GLOBAL, "");
+        }
+    }
         
     task_list->rt_task = new RT_TASK[task_list->task_count];
     task_list->rt_info = new RT_TASK_INFO[task_list->task_count];
@@ -299,10 +309,19 @@ static int load_task_list(FILE *fp, TaskList *task_list) {
     verify(task_list->rt_task == NULL || task_list->plc_task == NULL, E_OOM, "loading plc task");
     LOGGER_DBG(DFLAG_LONG, "PLCList:\n .task_count = %d\n .tasks_global_count = %d\n .timer_count = %d\n ", task_list->task_count, task_list->tasks_global_count, task_list->timer_count);
     for (int i = 0; i < task_list->task_count; i++) {
+        task_list->plc_task[i].task_index = i;
         if (load_plc_task(fp, &task_list->plc_task[i]) < 0) {
             delete[] task_list->rt_task;
             delete[] task_list->plc_task;
             LOGGER_ERR(E_LOAD_PLC_TASK, "");
+        }
+        if(task_list->plc_task[i].task_desc.type == 1){
+            signalval_t temp;
+            task_list->signal_set.count ++;
+            temp.task_index = i;
+            temp.last = 0;
+            temp.current = task_list->plc_task[i].task_desc.signal;
+            task_list->signal_set.sig.push_back(temp);
         }
     }
     return 0;
