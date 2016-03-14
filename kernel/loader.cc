@@ -297,11 +297,13 @@ static int load_task_list(FILE *fp, TaskList *task_list) {
 
     task_list->plcglobal = new IValue[task_list->tasks_global_count];
     for (int i = 0; i < task_list->tasks_global_count; i++) {
+        printf("\nPLC Task Global Variable:\n");
         if (load_value(fp, &task_list->plcglobal[i], NULL) < 0) {
             delete[] task_list->plcglobal;
-            // LOGGER_ERR(E_LOAD_TASK_GLOBAL, "");
+            LOGGER_ERR(E_LOAD_TASK_GLOBAL, "");
         }
     }
+    EOL;
         
     task_list->rt_task = new RT_TASK[task_list->task_count];
     task_list->rt_info = new RT_TASK_INFO[task_list->task_count];
@@ -309,6 +311,7 @@ static int load_task_list(FILE *fp, TaskList *task_list) {
     verify(task_list->rt_task == NULL || task_list->plc_task == NULL, E_OOM, "loading plc task");
     LOGGER_DBG(DFLAG_LONG, "PLCList:\n .task_count = %d\n .tasks_global_count = %d\n .timer_count = %d\n ", task_list->task_count, task_list->tasks_global_count, task_list->timer_count);
     for (int i = 0; i < task_list->task_count; i++) {
+        printf("task : %d\n", i);
         task_list->plc_task[i].task_index = i;
         if (load_plc_task(fp, &task_list->plc_task[i]) < 0) {
             delete[] task_list->rt_task;

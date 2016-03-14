@@ -29,7 +29,8 @@ void softimer_server(void* cookie){
 				if(timer_manager.timer_list[i].startflag){
 					if(timer_manager.timer_list[i].cur_count < timer_manager.timer_list[i].target_count){
 						timer_manager.timer_list[i].cur_count += 1;
-					} else {
+					} 
+					if(timer_manager.timer_list[i].cur_count >= timer_manager.timer_list[i].target_count){
 						timer_manager.timer_list[i].arriveflag = true;
 					}
 				} else {

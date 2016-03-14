@@ -8,6 +8,7 @@
 #include "comanager.h"
 
 
+extern TaskList plc_task;
 /* program counter */
 #define PC  (task->pc)
 #define EOC (task->task_desc.inst_count) /* end of code */
@@ -50,7 +51,7 @@
 #define CURR_SF (STK.base[TOP-1]) /* current stack frame */
 #define PREV_SF (STK.base[TOP-2]) /* previous stack frame */
 #define R(i)    (CURR_SF.reg[i])
-#define G(i)    (task->vglobal[i])
+#define G(i)    (plc_task.plcglobal[i])
 #define K(i)    (task->vconst[i])
 // #define REF(i)  (task->vref).at(i)
 
@@ -272,8 +273,8 @@ RT_EVENT comm_event_desc;
 RT_HEAP g_ioconf_heap;
 IOConfig *g_ioconf;
 IOMem g_ioshm;
-static void executor(void *plc_task) {
-    PLCTask *task = (PLCTask *)plc_task;
+static void executor(void *plc_task_cookie) {
+    PLCTask *task = (PLCTask *)plc_task_cookie;
     uint8_t temp_task_type = task->task_desc.type;
     unsigned long signal_wait_mask = 0;
     unsigned long mask_ret;
@@ -299,7 +300,7 @@ static void executor(void *plc_task) {
         for (PC = 0; PC < EOC; ) {
             LOGGER_DBG(DFLAG_SHORT, "instruction[%d] = %0#10x, OpCode = %d", PC, instruction, opcode);
             switch (opcode) {
-                case OP_GLOAD:  R(A) = G(Bx); dump_imov(GLOAD, <--, G, Bx); PC++; break; /* PC++ MUST be last */
+                case OP_GLOAD:  R(A) = G(Bx);  dump_imov(GLOAD, <--, G, Bx); PC++; break; /* PC++ MUST be last */
                 case OP_GSTORE: G(Bx) = R(A); dump_imov(GSTORE, -->, G, Bx); PC++; break;
                 case OP_KLOAD:  R(A) = K(Bx); dump_imov(KLOAD, <--, K, Bx); PC++; break;
                 case OP_LDLOAD:  do_ldload(R(A), LDI_CH(B, C)); dump_iio(LDLOAD, <--, LDI); PC++; break;

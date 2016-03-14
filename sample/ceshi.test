@@ -30,24 +30,24 @@ acs_max_acc  20.0
 acs_max_dec  20.0
 acs_max_jerk 10.0
 
-plc_task_count 1
+plc_task_count 2
 plc_global_count 1
 plc_timer_count  1
 
-PG TUINT 1
+PG TUINT 0
 
 tds_name         task1
 tds_priority     80
 tds_type         TASK_TYPE_INTERVAL
 tds_signal       0
-tds_interval     100000000
+tds_interval     1000000000
 tds_sp_size      256
 tds_cs_size      4
 tds_pou_count    3
 tds_const_count  5
 tds_global_count 1
 tds_refval_count 9
-tds_inst_count   11
+tds_inst_count   13
 
 pds_name         main
 pds_type         POU_TYPE_PROG
@@ -65,7 +65,7 @@ pds_input_count  2
 pds_inout_count  0
 pds_output_count 1
 pds_local_count  0
-pds_entry        6
+pds_entry        7
 
 pds_name         add2
 pds_type         POU_TYPE_FB
@@ -74,7 +74,7 @@ pds_input_count  2
 pds_inout_count  0
 pds_output_count 1
 pds_local_count  1
-pds_entry        9
+pds_entry        10
 
 K TUINT 8
 K TUINT 3
@@ -103,6 +103,7 @@ I OP_KLOAD 4 3
 I OP_TON 0 8
 I OP_GETFIELD 2 0 1
 I OP_GETFIELD 3 0 4
+I OP_GSTORE 3 0
 I OP_HALT 0 0 0 # Halt
 
 I OP_ADD 2 0 1 
@@ -112,6 +113,32 @@ I OP_ADD 2 0 1
 I OP_ADD 2 2 3
 I OP_RET 0 2
 
+tds_name         task2
+tds_priority     81
+tds_type         TASK_TYPE_SIGNAL
+tds_signal       0
+tds_interval     8000000
+tds_sp_size      256
+tds_cs_size      4
+tds_pou_count    1
+tds_const_count  1
+tds_global_count 0
+tds_refval_count 0
+tds_inst_count   2
+
+pds_name         main2
+pds_type         POU_TYPE_PROG
+pds_instance     0
+pds_input_count  0
+pds_inout_count  0
+pds_output_count 0
+pds_local_count  1
+pds_entry        0
+
+K TUINT 11
+
+I OP_KLOAD 0 0
+I OP_HALT 0 0 0 # Halt
 
 
 EOF
