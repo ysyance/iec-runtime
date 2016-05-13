@@ -5,6 +5,8 @@
 #include "logger.h"
 #include <native/task.h>
 #include <native/heap.h>
+#include <native/mutex.h>
+#include <native/cond.h>
 
 #define RC_TASK_NAME "rc_task"
 #define RC_TASK_PRIORITY 80
@@ -12,24 +14,25 @@
 #define ROBOT_AXIS_COUNT 6
 #define CIRCULAR_INTERP_QUEUE_SIZE 10
 
- extern RT_HEAP rc_heap_desc;
-
-/* TODO Add multiple axis ?? */
-typedef struct {
-    double command_pos;				
-    double command_vel;
-    double command_acc;
-} SingleInterpData; /* Single axis interpolation command from RC */
+extern RT_HEAP rc_heap_desc;
+extern RT_COND rc_cond_desc;
+extern RT_MUTEX rc_mutex_desc;
 
 typedef struct {
-	double actual_pos;
-    double actual_vel;
-    double actual_acc;
-} SingleAxisInfo;  /* Single axis  actual data from PLC  */
+    double command_pos;         /* 目标位置 */
+    double command_vel;         /* 目标速度 */
+    double command_acc;         /* 目标加速度 */
+} SingleInterpData; /* 单轴插补值,来自RC */
+
+typedef struct {
+	double actual_pos;          /* 实际位置 */
+    double actual_vel;          /* 实际速度 */
+    double actual_acc;          /* 实际加速度 */
+} SingleAxisInfo;  /* 单轴实际位置值,来自PLC  */
 
 typedef struct {
 	int size ;
-	SingleAxisInfo axis_info[ROBOT_AXIS_COUNT]; 
+	SingleAxisInfo axis_info[ROBOT_AXIS_COUNT];
 } RobotAxisActualInfo;
 
 typedef struct {
@@ -46,16 +49,16 @@ typedef struct {
 
 typedef struct {
 	RobotAxisActualInfo actual_info;
-	CircularInterpQueue interp_info;
+	CircularInterpQueue interp_queue;
 } RCMem;
 
 
 
 /*-----------------------------------------------------------------------------
- * RC Shared Memory Operation Funcions
+ * PLC/RC共享内存创建操作函数
  *---------------------------------------------------------------------------*/
-
  #define RC_MEM_NAME "rc_mem"
+
  inline void rc_mem_create(RCMem *&rcmem, RobotConfig *config) {
  	int size = sizeof(RCMem);
  	int ret = 0;
@@ -87,12 +90,31 @@ inline void io_mem_unbind(RCMem *rcmem, RobotConfig *config) {
     }
 }
 
+/*-----------------------------------------------------------------------------
+ * PLC/RC共享内存同步操作函数
+ *---------------------------------------------------------------------------*/
+#define RC_MUTEX_NAME  "rc_mutex"
+#define RC_COND_NAME   "rc_cond"
 
-//static void interp_input_update();
-//static void interp_output_update();
-static void interp_calculate(void *config); /* TODO NOTE single/multiple axis interpolation */
-static void rc_task_create();
-void rc_task_init(RobotConfig *config);
-void rc_task_start(RobotConfig *config);
-void rc_task_delete();
+inline void rc_syncobj_create(RT_MUTEX *mutex_desc, const char* mutex_name, RT_COND *cond_desc, const char* cond_name){
+    if(rt_mutex_create(mutex_desc, mutex_name) < 0){
+        LOGGER_ERR(E_RCMUTEX_CREATE, "(name=%s)", mutex_name);
+    }
+    if(rt_cond_create(cond_desc, cond_name) < 0){
+        LOGGER_ERR(E_RCCOND_CREATE, "(name=%s)",cond_name);
+    }
+}
+
+inline void rc_syncobj_delete(RT_MUTEX *mutex_desc, RT_COND *cond_desc){
+    if(rt_cond_delete(cond_desc) < 0){
+        LOGGER_ERR(E_RCMUTEX_DEL, "(name=rc_mutex)");
+    }
+	if(rt_mutex_delete(mutex_desc) < 0){
+        LOGGER_ERR(E_RCCOND_DEL, "(name=rc_cond)");
+    }
+}
+
+void rc_shm_servo_read(RCMem *rc_shm, RobotInterpData *axis_command_info);
+void rc_shm_servo_write(RCMem *rc_shm, RobotAxisActualInfo *axis_actual_info);
+
 #endif

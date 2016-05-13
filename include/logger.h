@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 
-// #define FOR_DEBUG 
+// #define FOR_DEBUG
 
 #define LEVEL_OFF 0
 #define LEVEL_ERR 1
@@ -187,6 +187,13 @@ enum ErrorCode {
     /* RC RT Task */
     E_RCTASK_FORK,
     E_RCTASK_EXEC,
+    /* RC/PLC Sync Object */
+    E_RCMUTEX_CREATE,
+    E_RCCOND_CREATE,
+    E_RCMUTEX_DEL,
+    E_RCCOND_DEL,
+
+    E_INTERP_QUEUE_POINTER,
 };
 
 static const char *err_msg[] = {
@@ -305,5 +312,12 @@ static const char *err_msg[] = {
     /* RC RT Task */
     "Failed to fork rc task(linux process)",
     "Failed to exec rc task(linux process)",
+    /* RC/PLC Sync Object */
+    "Failed to create rc sync mutex object",
+    "Failed to create rc sysc cond object",
+    "Failed to delete rc sync mutex object",
+    "Failed to delete rc sync cond object",
+
+    "Interpolation queue pointer error",
 };
 #endif
