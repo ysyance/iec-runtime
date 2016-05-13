@@ -5,9 +5,9 @@ LIBS := native xenomai pthread_rt
 INCLUDES := ../include ${PREFIX_XENO}/include
 SRCDIR :=
 
-CC = arm-xilinx-linux-gnueabi-g++
-CXX = arm-xilinx-linux-gnueabi-g++
-CFLAGS := -std=c++0x
+CC = arm-linux-gnueabi-g++
+CXX = arm-linux-gnueabi-g++
+CFLAGS := -std=c++11 
 CPPFLAGS += $(CFLAGS) $(addprefix -I,$(INCLUDES))
 
 RM-F := rm -f

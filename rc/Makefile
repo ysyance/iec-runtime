@@ -1,14 +1,13 @@
 PREFIX_XENO := /home/mynfs/usr/xenomai
-EXECUTABLE := ../iec-runtime
+EXECUTABLE := ../rc-test-task
 LIBDIR := ${PREFIX_XENO}/lib
 LIBS := native xenomai pthread_rt
 INCLUDES := ../include ${PREFIX_XENO}/include
-SRCDIR := ./libsys
+SRCDIR :=
 
-CC = arm-linux-gnueabi-gcc
+CC = arm-linux-gnueabi-g++
 CXX = arm-linux-gnueabi-g++
 CFLAGS := -std=c++11 
-
 CPPFLAGS += $(CFLAGS) $(addprefix -I,$(INCLUDES))
 
 RM-F := rm -f

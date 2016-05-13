@@ -40,7 +40,7 @@ tds_name         task1
 tds_priority     80
 tds_type         TASK_TYPE_INTERVAL
 tds_signal       0
-tds_interval     1000000000
+tds_interval     10000000
 tds_sp_size      256
 tds_cs_size      4
 tds_pou_count    3

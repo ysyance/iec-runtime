@@ -184,6 +184,9 @@ enum ErrorCode {
     E_SIG_PLCKILL,
     /* Pipe */
     E_PIPE_OPEN,
+    /* RC RT Task */
+    E_RCTASK_FORK,
+    E_RCTASK_EXEC,
 };
 
 static const char *err_msg[] = {
@@ -299,5 +302,8 @@ static const char *err_msg[] = {
     "Failed to set 'plc kill' signal handler",
     /* Pipe */
     "Failed to open pipe",
+    /* RC RT Task */
+    "Failed to fork rc task(linux process)",
+    "Failed to exec rc task(linux process)",
 };
 #endif

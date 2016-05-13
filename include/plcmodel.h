@@ -35,7 +35,7 @@ typedef struct {
 	char name[MAX_TASK_NAME_SIZE]; /* plc task name */
 	uint8_t priority;              /* priority: 80-95 */
     uint8_t type;                  /* task type: SIGNAL | INTERVAL */
-    uint16_t signal;                /* signal source: TIMER | I/O */
+    uint16_t signal;               /* signal source: TIMER | I/O */
 	uint32_t interval;             /* time interval (uint: ns) */
     uint32_t sp_size;              /* capacity of string pool(unit: Byte) */
 	uint16_t cs_size;              /* capacity of calling stack(number of stack frame) */

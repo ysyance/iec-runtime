@@ -20,7 +20,7 @@ void communicate_server(void* cookie){
 	rt_task_set_periodic(NULL, TM_NOW, 1000000);
 	for(;;) {
 		rt_task_wait_period(NULL);
-		// printf("Communicate_server run\n");
+		// printf("Communicate_server run\n");   //just for debug
 		for(int i = 0; i < cnt; i ++){
 			uint16_t temp = plc_task.signal_set.sig[i].current;
 			if(temp & (1UL<<15)){
@@ -29,7 +29,7 @@ void communicate_server(void* cookie){
 				if(plc_task.plcglobal[temp].v.value_u > plc_task.signal_set.sig[i].last){
 					unsigned long sig_mask = 1UL << (plc_task.signal_set.sig[i].task_index);
 					err = rt_event_signal(&communicate_event_desc, sig_mask);
-					printf("task2 running ......................\n");
+					// printf("task2 running ......................\n"); //just for debug
 				}
 
 				plc_task.signal_set.sig[i].last = plc_task.plcglobal[temp].v.value_u;

@@ -12,11 +12,15 @@ make rebuild
 # Step2: generate obj file
 # ${GENOBJ} "$1" < "$1".test
 g++ translator.cc -std=c++11 -o translator.exe
-${GENOBJ} ${TESTDIR}/"$1".test
-# Step3: move iec-runtime & obj file to NFS directory
-mv ${EXE} ${NFSDIR}
-# mv "$1" exec.obj
-mv exec.obj ${NFSDIR}
-# Step4: clean up
-make clean
-echo "OneKey: Success !"
+if [ $# -gt 0 ]; then
+	${GENOBJ} ${TESTDIR}/"$1".test
+	# Step3: move iec-runtime & obj file to NFS directory
+	mv ${EXE} ${NFSDIR}
+	# mv "$1" exec.obj
+	mv exec.obj ${NFSDIR}
+	# Step4: clean up
+	make clean
+	echo "PLC OneKey: Success !"
+else 
+	echo "lack of argument: there are only $# arguments !!!"
+fi
