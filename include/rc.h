@@ -8,11 +8,11 @@
 #include <native/mutex.h>
 #include <native/cond.h>
 
-#define RC_TASK_NAME "rc_task"
-#define RC_TASK_PRIORITY 80
+#define RC_TASK_NAME "rc_task"      /* RC任务名 */
+#define RC_TASK_PRIORITY 80         /* RC任务优先级 */
 
-#define ROBOT_AXIS_COUNT 6
-#define CIRCULAR_INTERP_QUEUE_SIZE 10
+#define ROBOT_AXIS_COUNT 6          /* 机器人轴个数 */
+#define CIRCULAR_INTERP_QUEUE_SIZE 50   /* 环形插补队列大小 */
 
 extern RT_HEAP rc_heap_desc;
 extern RT_COND rc_cond_desc;
@@ -31,26 +31,26 @@ typedef struct {
 } SingleAxisInfo;  /* 单轴实际位置值,来自PLC  */
 
 typedef struct {
-	int size ;
-	SingleAxisInfo axis_info[ROBOT_AXIS_COUNT];
-} RobotAxisActualInfo;
+	int size ;                 /* 机器人轴个数 */
+	SingleAxisInfo axis_info[ROBOT_AXIS_COUNT];    /* 对应各个轴的位置，速度，加速度信息 */
+} RobotAxisActualInfo;  /* 机器人各个轴的信息 */
 
 typedef struct {
-	int size;			// axis count, that is , ROBOT_AXIS_COUNT
-	SingleInterpData interp_value[ROBOT_AXIS_COUNT];
-} RobotInterpData;
+	int size;			/* 机器人轴个数 */
+	SingleInterpData interp_value[ROBOT_AXIS_COUNT];   /* 对应各个轴的插补值 */
+} RobotInterpData;      /* 机器人各个轴的插补值 */
 
 typedef struct {
-	int queue_size;
-	int head;
-	int tail;
-	RobotInterpData data[CIRCULAR_INTERP_QUEUE_SIZE];
-} CircularInterpQueue;  /* circular interpolation queue */
+	int queue_size;        /* 环形插补队列大小 */
+	int head;              /* 环形队列头指针（实际是data[]数组的索引，即0～queue_size-1之间），RC由此写入插补值 */
+	int tail;              /* 环形队列尾指针（实际是data[]数组的索引，即0～queue_size-1之间），PLC由此读出插补值 */
+	RobotInterpData data[CIRCULAR_INTERP_QUEUE_SIZE];  /* 环形队列中存放插补值的实际数组 */
+} CircularInterpQueue;  /* 环形插补队列 */
 
 typedef struct {
-	RobotAxisActualInfo actual_info;
-	CircularInterpQueue interp_queue;
-} RCMem;
+	RobotAxisActualInfo actual_info;       /* 机器人各个轴实际位置，速度，加速度值 */
+	CircularInterpQueue interp_queue;      /* 机器人插补值队列 */
+} RCMem;    /* RC与PLC共享内存数据结构 */
 
 
 
