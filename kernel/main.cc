@@ -108,6 +108,25 @@ void insert_rc_task(pid_t rc_pid){
     }
 }
 
+RT_TASK test_desc;
+RobotInterpData axis_command_info;
+void test_routine(void *cookie){
+    rt_task_set_periodic(NULL, TM_NOW, 8000000);
+    int cnt = 1;
+
+    axis_command_info.size = 6;
+
+    while(1){
+        rt_task_wait_period(NULL);
+        rc_shm_servo_read(rc_shm, &axis_command_info);
+        printf("cnt: %d\n", cnt++);
+        for(int i = 0; i < 6; i ++){
+            printf("plc axis %d, pos: %f, vel: %f, acc: %f\n", i,axis_command_info.interp_value[i].command_pos, axis_command_info.interp_value[i].command_vel, axis_command_info.interp_value[i].command_acc);
+            // fflush(stdin);
+        }
+    }
+}
+
 static int initflag = 0;        /* 初始化标志 */
 
 int main(int argc, char *argv[]) {
@@ -131,6 +150,7 @@ int main(int argc, char *argv[]) {
             io_mem_zero(&io_shm, io_conf);                      /* I/O映像区初始化 */
 
             rc_mem_create(rc_shm, rc_conf);                     /* 创建RC与PLC共享内存区 */
+            rc_shm_servo_init(rc_shm);                          /* 对RC/PLC内存共享区进行初始化 */
             rc_syncobj_create(&rc_mutex_desc, RC_MUTEX_NAME, &rc_cond_desc, RC_COND_NAME);    /* 创建RC/PLC同步对象 */
 
             insert_io_driver(io_pid);                           /* 加载I/O驱动子任务 */
@@ -142,8 +162,11 @@ int main(int argc, char *argv[]) {
             rt_task_bind(&sv_task, SV_TASK_NAME, TM_INFINITE);  /* 任务描述符sv_task绑定伺服驱动子任务 */
             rt_task_bind(&rc_task, RC_TASK_NAME, TM_INFINITE);  /* 任务描述符rc_task绑定RC子任务 */
 
-            plc_task_init(&plc_task);                           /* 初始化plc任务 */
-            plc_task_start(&plc_task);                          /* 启动plc任务 */
+            rt_task_create(&test_desc, "test_task", 0, 88, T_CPU(0));
+            rt_task_start(&test_desc, &test_routine, NULL);
+
+            // plc_task_init(&plc_task);                           /* 初始化plc任务 */
+            // plc_task_start(&plc_task);                          /* 启动plc任务 */
         }
     }
     return 0;

@@ -30,6 +30,34 @@ void rc_shm_io_read(RCMem *rc_shm, void *cookie){
 }
 
 /**
+ * 函数名：rc_shm_servo_init
+ * 功能：对RC/PLC内存共享区进行初始化。
+ * 参数：rc_shm：内存共享区指针
+ * 返回值：无
+ */
+void rc_shm_servo_init(RCMem *rc_shm){
+    /* 伺服实际位置信息初始化 */
+    rc_shm->actual_info.size = ROBOT_AXIS_COUNT;
+    for(int i = 0; i < ROBOT_AXIS_COUNT; i ++){
+        rc_shm->actual_info.axis_info[i].actual_pos = 0.0;
+        rc_shm->actual_info.axis_info[i].actual_vel = 0.0;
+        rc_shm->actual_info.axis_info[i].actual_acc = 0.0;
+    }
+    /* 伺服命令位置信息初始化 */
+    rc_shm->interp_queue.queue_size = CIRCULAR_INTERP_QUEUE_SIZE;
+    rc_shm->interp_queue.head = 0;
+    rc_shm->interp_queue.tail = 0;
+    for(int i = 0; i < CIRCULAR_INTERP_QUEUE_SIZE; i ++){
+        rc_shm->interp_queue.data[i].size = ROBOT_AXIS_COUNT;
+        for(int j = 0; j < ROBOT_AXIS_COUNT; j ++){
+            rc_shm->interp_queue.data[i].interp_value[j].command_pos = 0.0;
+            rc_shm->interp_queue.data[i].interp_value[j].command_vel = 0.0;
+            rc_shm->interp_queue.data[i].interp_value[j].command_acc = 0.0;
+        }
+    }
+}
+
+/**
  * 函数名：rc_shm_servo_write
  * 功能：PLC向共享内存数据区写入伺服电机实际位置、速度、加速度信息；
  *      首先获得同步互斥量，然后写入数据，最后释放同步互斥量。
@@ -61,8 +89,11 @@ void rc_shm_servo_read(RCMem *rc_shm, RobotInterpData *axis_command_info){
     if((rc_shm->interp_queue.tail == rc_shm->interp_queue.head + 1)
         || (rc_shm->interp_queue.tail == 0 && rc_shm->interp_queue.head == CIRCULAR_INTERP_QUEUE_SIZE - 1)){
             int p_tail = rc_shm->interp_queue.tail;
-            for(int i = 0; i < axis_command_info->size; i ++){      /* 从队列中读取插补值 */
-                axis_command_info->interp_value[i] = rc_shm->interp_queue.data[p_tail].interp_value[i];
+            printf("p_tail: %d\n", p_tail);
+            for(int i = 0; i < ROBOT_AXIS_COUNT; i ++){      /* 从队列中读取插补值 */
+                axis_command_info->interp_value[i].command_pos = rc_shm->interp_queue.data[p_tail].interp_value[i].command_pos;
+                axis_command_info->interp_value[i].command_vel = rc_shm->interp_queue.data[p_tail].interp_value[i].command_vel;
+                axis_command_info->interp_value[i].command_acc = rc_shm->interp_queue.data[p_tail].interp_value[i].command_acc;
             }
             /* 更新队列尾指针 */
             if(rc_shm->interp_queue.tail < CIRCULAR_INTERP_QUEUE_SIZE - 1){
@@ -78,8 +109,12 @@ void rc_shm_servo_read(RCMem *rc_shm, RobotInterpData *axis_command_info){
             rt_cond_wait(&rc_cond_desc, &rc_mutex_desc, TM_INFINITE);   /* 等待RC计算出插补值加入队列 */
         }
         int p_tail = rc_shm->interp_queue.tail;
-        for(int i = 0; i < axis_command_info->size; i ++){      /* 从队列中读取插补值 */
-            axis_command_info->interp_value[i] = rc_shm->interp_queue.data[p_tail].interp_value[i];
+        printf("p_tail: %d\n", p_tail);
+        for(int i = 0; i < ROBOT_AXIS_COUNT; i ++){      /* 从队列中读取插补值 */
+            // axis_command_info->interp_value[i] = rc_shm->interp_queue.data[p_tail].interp_value[i];
+            axis_command_info->interp_value[i].command_pos = rc_shm->interp_queue.data[p_tail].interp_value[i].command_pos;
+            axis_command_info->interp_value[i].command_vel = rc_shm->interp_queue.data[p_tail].interp_value[i].command_vel;
+            axis_command_info->interp_value[i].command_acc = rc_shm->interp_queue.data[p_tail].interp_value[i].command_acc;
         }
         /* 更新队列尾指针 */
         if(rc_shm->interp_queue.tail < CIRCULAR_INTERP_QUEUE_SIZE - 1){
