@@ -31,7 +31,7 @@
 typedef struct {
 	int bytes;
 	std::string type;
-	bool is_macro; 
+	bool is_macro;
 } decrip_format;
 
 typedef struct {
@@ -115,7 +115,7 @@ objmacro_format objmacro = {
 	{"BYTE_ORDER_LIT", "1"},
 	{"BYTE_ORDER_BIT", "2"},
 	{"MACH_CORTEX_A8", "1"},
-	// Axis 
+	// Axis
 	{"AXIS_TYPE_FINITE", "1"},
 	{"AXIS_TYPE_MODULO", "2"},
 	{"AXIS_INDEPENDENT", "1"},
@@ -126,7 +126,7 @@ objmacro_format objmacro = {
 	// task
 	{"TASK_TYPE_SIGNAL", "1"},
 	{"TASK_TYPE_INTERVAL", "2"},
-	// pou 
+	// pou
 	{"POU_TYPE_FUN", "1"},
 	{"POU_TYPE_FB", "2"},
 	{"POU_TYPE_PROG", "3"},
@@ -136,9 +136,57 @@ objmacro_format objmacro = {
 	{"TDOUBLE", "3"},
 	{"TSTRING", "4"},
 	// System-level POU
-    {"SFUN_ABS", "0"},
-    {"SFUN_SQRT", "1"}
+
+	/* 数值函数 */
+	{"SFUN_ABS", "0"},
+    {"SFUN_SQRT", "1"},
+	{"SFUN_LOG", "2"},
+	{"SFUN_LN", "3"},
+	{"SFUN_EXP", "4"},
+	{"SFUN_SIN", "5"},
+	{"SFUN_COS", "6"},
+	{"SFUN_TAN", "7"},
+	{"SFUN_ASIN", "8"},
+	{"SFUN_ACOS", "9"},
+	{"SFUN_ATAN", "10"},
+	/* 算术函数 */
+	{"SFUN_ADD", "11"},
+	{"SFUN_MUL", "12"},
+	{"SFUN_MOD", "13"},
+	{"SFUN_EXPT", "14"},
+	/* 位操作函数 */
+	{"SFUN_AND", "15"},
+	{"SFUN_OR", "16"},
+	{"SFUN_XOR", "17"},
+	{"SFUN_ROL", "18"},
+	{"SFUN_ROR", "19"},
+	/* 比较函数 */
+	{"SFUN_LT", "20"},
+	{"SFUN_LE", "21"},
+	{"SFUN_GT", "22"},
+	{"SFUN_GE", "23"},
+	{"SFUN_EQ", "24"},
+	/* 选择函数 */
+	{"SFUN_SEL", "25"},
+	{"SFUN_MAX", "26"},
+	{"SFUN_MIN", "27"},
+	{"SFUN_LIMIT", "28"},
+	{"SFUN_MUX", "29"},
+	/* 字符串函数 */
+	{"SFUN_LEN", "30"},
+	{"SFUN_LEFT", "31"},
+	{"SFUN_RIGHT", "32"},
+	{"SFUN_MID", "33"},
+	{"SFUN_CONCAT", "34"},
+	{"SFUN_INSERT", "35"},
+	{"SFUN_DELETE", "36"},
+	{"SFUN_REPLACE", "37"},
+	{"SFUN_FIND", "38"},
+	/* RC/PLC交互函数 */
+	{"SFUN_INTERP_UPDATE", "39"},
 };
+
+
 
 // Original Instruction Encoder
 auto create_ABC = []( std::vector<std::string> result) {
@@ -192,7 +240,7 @@ auto create_scall = []( std::vector<std::string> result) -> int {
 						std::vector<std::string> new_res = result;
 						new_res[3] = objmacro[result[3]];
 						return create_ABx(new_res);
-					};		
+					};
 
 code_gen_table opcode = {
 	// data move
@@ -247,6 +295,8 @@ code_gen_table opcode = {
     {"OP_TP", {41, create_ABx}},
     {"OP_TON", {42, create_ABx}},
     {"OP_TOF", {43, create_ABx}},
+    {"OP_PGLOAD", {44, create_ABx}},
+	{"OP_PGSTORE", {45, create_ABx}},
     // helper
     {"OP_LDIX", {4, create_DX}},
     {"OP_LDIB", {4, create_DB}},
@@ -274,7 +324,7 @@ std::vector<std::string> split(std::string str,std::string pattern)
   std::vector<std::string> realresult;
   str += pattern;//扩展字符串以方便操作
   int size=str.size();
- 
+
   for(int i = 0; i < size; i ++)
   {
     pos = str.find(pattern, i);
@@ -297,7 +347,7 @@ std::vector<std::string> split(std::string str,std::string pattern)
 void dump_inst(std::ofstream &outfile, std::vector<std::string> &result) {
 	int temp = opcode[result[1]].creator(result);
 	outfile.write((char*)&temp, 4);
-	std::cout << "instruction" << std::endl;
+	// std::cout << "instruction" << std::endl;
 }
 
 void dump_value(std::ofstream &outfile, std::vector<std::string> &result) {

@@ -51,7 +51,8 @@ extern TaskList plc_task;
 #define CURR_SF (STK.base[TOP-1]) /* current stack frame */
 #define PREV_SF (STK.base[TOP-2]) /* previous stack frame */
 #define R(i)    (CURR_SF.reg[i])
-#define G(i)    (plc_task.plcglobal[i])
+#define G(i)    (task->vglobal[i])
+#define PG(i)   (plc_task.plcglobal[i])
 #define K(i)    (task->vconst[i])
 // #define REF(i)  (task->vref).at(i)
 
@@ -142,6 +143,7 @@ extern TaskList plc_task;
 }
 #define dump_R(i) dump_data(R, i, R(i))
 #define dump_G(i) dump_data(G, i, G(i))
+#define dump_PG(i) dump_data(PG, i, PG(i))
 #define dump_K(i) dump_data(K, i, K(i))
 /* data mov instruction */
 #define dump_imov(i, arrow, src, index) { \
@@ -210,6 +212,13 @@ extern TaskList plc_task;
     dump_R(B);                    \
     EOL;                          \
 }
+#define dump_lnot() {              \
+    dump_opcode(LNOT);             \
+    dump_R(A);                    \
+    fprintf(stderr, " <-- !");    \
+    dump_R(B);                    \
+    EOL;                          \
+}
 #define dump_getfield() {         \
     dump_opcode(GETFIELD);        \
     dump_R(A);                    \
@@ -250,6 +259,7 @@ extern TaskList plc_task;
 #define dump_data(s, i, v)
 #define dump_R(i)
 #define dump_G(i)
+#define dump_PG(i)
 #define dump_K(i)
 #define dump_imov(i, arrow, src, index)
 #define dump_iarith(i, op)
@@ -262,6 +272,7 @@ extern TaskList plc_task;
 #define dump_ret()
 #define dump_condj(n)
 #define dump_not()
+#define dump_lnot()
 #define dump_getfield()
 #define dump_setfield()
 #define dump_tp()
@@ -325,7 +336,7 @@ static void executor(void *plc_task_cookie) {
                 case OP_LAND:   vland(R(A), R(B), R(C)); dump_iarith(LAND, &&); PC++; break;
                 case OP_LOR:    vlor(R(A), R(B), R(C));  dump_iarith(LOR, ||); PC++; break;
                 case OP_LXOR:   vlxor(R(A), R(B), R(C)); dump_iarith(LXOR, ^^); PC++; break;
-                case OP_LNOT:   vlnot(R(A), R(B)); PC++; break;
+                case OP_LNOT:   vlnot(R(A), R(B)); dump_lnot(); PC++; break;
                 case OP_LT:     vlt(R(A), R(B), R(C)); dump_iarith(LT, <); PC++; break;
                 case OP_LE:     vle(R(A), R(B), R(C)); dump_iarith(LE, <=); PC++; break;
                 case OP_GT:     vgt(R(A), R(B), R(C)); dump_iarith(GT, >); PC++; break;
@@ -343,6 +354,8 @@ static void executor(void *plc_task_cookie) {
                 case OP_TP: dump_tp(A, Bx); do_tp(A, Bx); PC++; break;
                 case OP_TON: dump_ton(A, Bx); do_ton(A, Bx); PC++; break;
                 case OP_TOF: dump_tof(A, Bx); do_tof(A, Bx); PC++; break;
+                case OP_PGLOAD: R(A) = PG(Bx);  dump_imov(PGLOAD, <--, PG, Bx); PC++; break;
+                case OP_PGSTORE: PG(Bx) = R(A); dump_imov(PGSTORE, -->, PG, Bx); PC++; break;
                 default: LOGGER_DBG(DFLAG_SHORT, "Unknown OpCode(%d)", opcode); break;
             }
         }

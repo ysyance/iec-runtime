@@ -52,7 +52,9 @@ struct RCMem{                              /* RC与PLC共享内存数据结构 *
 	CircularInterpQueue interp_queue;      /* 机器人插补值队列 */
 } ;
 
-
+extern RobotInterpData robot_interpdata_buffer;  /* 机器人插补数据缓存，用于存放从共享内存区读到的插补数据，处理后写入伺服映像区 */
+extern RobotAxisActualInfo robot_actual_info_buffer; /* 机器人实际轴位置信息缓存，由伺服映像区加载得到，处理后写入RC共享内存 */
+extern RCMem *rc_shm;               /* RC/PLC共享区指针 */
 
 /*-----------------------------------------------------------------------------
  * PLC/RC共享内存创建操作函数

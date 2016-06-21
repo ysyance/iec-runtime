@@ -7,10 +7,10 @@ header_machine MACH_CORTEX_A8
 iocs_update_interval 8000000
 iocs_ldi_count 1
 iocs_ldo_count 1
-iocs_lai_count 1
-iocs_lao_count 1
-iocs_rdi_count 0
-iocs_rdo_count 0
+iocs_rdi_count 1
+iocs_rdo_count 1
+iocs_lai_count 0
+iocs_lao_count 0
 iocs_rai_count 0
 iocs_rao_count 0
 
@@ -103,7 +103,7 @@ I OP_KLOAD 4 3
 I OP_TON 0 8
 I OP_GETFIELD 2 0 1
 I OP_GETFIELD 3 0 4
-I OP_GSTORE 3 0
+I OP_PGSTORE 3 0
 I OP_HALT 0 0 0 # Halt
 
 I OP_ADD 2 0 1 

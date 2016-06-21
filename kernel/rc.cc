@@ -1,6 +1,9 @@
 #include "rc.h"
 
 
+RobotInterpData robot_interpdata_buffer;                /* 机器人插补数据缓存，用于存放从共享内存区读到的插补数据，处理后写入伺服映像区 */
+RobotAxisActualInfo robot_actual_info_buffer;           /* 机器人实际轴位置信息缓存，由伺服映像区加载得到，处理后写入RC共享内存 */
+
 /**
  * 函数名：rc_shm_io_write
  * 功能：PLC向共享内存数据区写入IO数据；
@@ -31,7 +34,7 @@ void rc_shm_io_read(RCMem *rc_shm, void *cookie){
 
 /**
  * 函数名：rc_shm_servo_init
- * 功能：对RC/PLC内存共享区进行初始化。
+ * 功能：对RC/PLC内存共享区伺服段进行初始化。
  * 参数：rc_shm：内存共享区指针
  * 返回值：无
  */

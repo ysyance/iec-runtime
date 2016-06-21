@@ -24,8 +24,8 @@
 #define MAX_TASK_NAME_SIZE 16
 #define MAX_TASK_PRIORITY 95
 #define MIN_TASK_PRIORITY 80
-#define MAX_TASK_SIGNAL 0xff
-#define MIN_TASK_INTERVAL 8000000
+#define MAX_TASK_SIGNAL 0xffff
+#define MIN_TASK_INTERVAL 4000000
 #define MAX_TASK_POU_COUNT 1024 /* Program Organization Unit: FUN | FB | PROG */
 #define MAX_TASK_CONST_COUNT 1024 /* constant */
 #define MAX_TASK_GLOBAL_COUNT 1024 /* global variables */

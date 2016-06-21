@@ -11,10 +11,13 @@
 #define LOGGER_LEVEL LEVEL_ERR
 
 RT_TASK sv_task;
-RT_HEAP sv_heap;
+RT_HEAP sv_heap_desc;
 RT_HEAP svconf_heap;
+
+RT_MUTEX sv_mutex_desc;
+
 ServoConfig *sv_conf;
-char *sv_shm;
+SVMem *sv_shm;
 
 #define dump_servo_conf(config) {\
 	LOGGER_DBG(DFLAG_LONG, "Received ServoConfig:\n .axis_count = %d\n .update_interval = %d",\
@@ -28,29 +31,33 @@ char *sv_shm;
             config.min_pos, config.max_pos, config.max_vel, config.max_acc, config.max_dec, config.max_jerk);\
 }
 
+#define HOST "223.3.37.140"
+#define PORT 8888
+static inline void servo_mocker(SVMem *sv_shm, ServoConfig *sv_conf){
+	
+}
+
 /* realtime context */
 static void servo_update(void *cookie) {
-    sv_conf_bind(&svconf_heap, &sv_conf);
-    dump_servo_conf((*sv_conf));
-    int size = sv_conf->axis_count * sizeof(AXIS_DATA);
-	if (rt_heap_create(&sv_heap, "sv_shm", size, H_SHARED) < 0) {
-        LOGGER_ERR(E_HEAP_CREATE, "(name=sv_shm, size=%d)", size);
-    }
-    if (rt_heap_alloc(&sv_heap, size, TM_INFINITE, (void **)&sv_shm) < 0) {
-        LOGGER_ERR(E_HEAP_ALLOC, "(name=sv_shm, size=%d)", size);
-    }
 
+    sv_conf_bind(&svconf_heap, &sv_conf);	/* 绑定伺服配置共享区 */
+    dump_servo_conf((*sv_conf));
+	sv_mem_bind(sv_shm, sv_conf);           /* 绑定伺服数据共享区 */
+	sv_syncobj_bind(&sv_mutex_desc, SV_MUTEX_NAME); /* 绑定同步对象 */
+
+    int i = 0;
 	rt_task_set_periodic(NULL, TM_NOW, sv_conf->update_interval);
 	while (1) {
 		rt_task_wait_period(NULL);
-        // LOGGER_INF("STUB: Update servo data...", 0);
+        // if(i ++ == 1000)
+            LOGGER_INF("STUB: Update servo data...", 0);
 	}
 }
 
 void sig_handler(int signo) {
     LOGGER_DBG(DFLAG_SHORT, "Servo Driver Received Signal: %d", (int)signo);
     if (signo == SIGUSR1) {
-        if (rt_heap_delete(&sv_heap) < 0) {
+        if (rt_heap_delete(&sv_heap_desc) < 0) {
             LOGGER_ERR(E_HEAP_DELETE, "");
         }
         sv_conf_unbind(&svconf_heap);

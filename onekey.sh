@@ -22,5 +22,9 @@ if [ $# -gt 0 ]; then
 	make clean
 	echo "PLC OneKey: Success !"
 else 
+	# Step3: move iec-runtime & obj file to NFS directory
+	mv ${EXE} ${NFSDIR}
+	# Step4: clean up
+	make clean
 	echo "lack of argument: there are only $# arguments !!!"
 fi

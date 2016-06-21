@@ -193,6 +193,11 @@ enum ErrorCode {
     E_RCMUTEX_DEL,
     E_RCCOND_DEL,
 
+    /* PLC/Servo Sync Object */
+    E_SVMUTEX_CREATE,
+    E_SVMUTEX_DEL,
+    E_SVMUTEX_BIND,
+
     E_INTERP_QUEUE_POINTER,
 };
 
@@ -317,6 +322,10 @@ static const char *err_msg[] = {
     "Failed to create rc sysc cond object",
     "Failed to delete rc sync mutex object",
     "Failed to delete rc sync cond object",
+    /* PLC/Servo Sync Object */
+    "Failed to create servo sync mutex object",
+    "Failed to delete servo sync mutex object",
+    "Failed to bind to servo sync mutex object",
 
     "Interpolation queue pointer error",
 };

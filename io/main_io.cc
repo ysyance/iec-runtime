@@ -19,7 +19,7 @@ RT_HEAP ioconf_heap;
 IOConfig *io_conf;
 IOMem io_shm;
 
-#define HOST "223.3.50.81"
+#define HOST "223.3.37.140"
 #define PORT 8888
 static inline void rio_mocker(char *send_addr, int send_size, char *recv_addr, int recv_size) {
     int sockfd;
@@ -54,7 +54,7 @@ static inline void ldi_mocker(IOConfig *config) {
 }
 static inline void ldio_update(IOConfig *config) {
     ldi_mocker(config);
-    //rio_mocker(LDO(io_shm), LDO_SIZE(config), LDI(io_shm), LDI_SIZE(config));
+    //ldio_mocker(LDO(io_shm), LDO_SIZE(config), LDI(io_shm), LDI_SIZE(config));
 #if LEVEL_DBG <= LOGGER_LEVEL
     dump_mem("LDI", LDI(io_shm), LDI_SIZE(config));
     dump_mem("LDO", LDO(io_shm), LDO_SIZE(config));

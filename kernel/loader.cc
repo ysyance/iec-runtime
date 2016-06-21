@@ -142,8 +142,11 @@ static int load_task_desc(FILE *fp, TaskDesc *task_desc) {
     loadv(fp, &task_desc->inst_count);
     verify(task_desc->priority < MIN_TASK_PRIORITY || MAX_TASK_PRIORITY < task_desc->priority, E_TASK_PRIORITY, "");
     verify(task_desc->type != TASK_TYPE_SIGNAL && task_desc->type != TASK_TYPE_INTERVAL, E_TASK_TYPE, "");
-    verify(MAX_TASK_SIGNAL < task_desc->signal, E_TASK_SIGNAL, "");
-    verify(task_desc->interval < MIN_TASK_INTERVAL, E_TASK_INTERVAL, "");
+    if(task_desc->type == TASK_TYPE_SIGNAL)
+        verify(MAX_TASK_SIGNAL < task_desc->signal, E_TASK_SIGNAL, "");
+    if(task_desc->type == TASK_TYPE_INTERVAL) 
+        verify(task_desc->interval < MIN_TASK_INTERVAL, E_TASK_INTERVAL, "");
+    
     verify(MAX_SP_SIZE < task_desc->sp_size, E_LOAD_SP_SIZE, "");
     verify(MAX_CS_CAP < task_desc->cs_size, E_LOAD_CS_CAP, "");
     verify(MAX_TASK_POU_COUNT < task_desc->pou_count, E_TASK_POU_COUNT, "");

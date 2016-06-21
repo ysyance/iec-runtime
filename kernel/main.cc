@@ -24,15 +24,20 @@ RT_TASK rc_task;                    /* RC任务描述符 */
 RT_HEAP ioconf_heap;                /* I/O配置信息共享区描述符 */
 RT_HEAP svconf_heap;                /* 伺服配置信息共享区描述符 */
 RT_HEAP rc_heap_desc;               /* RC/PLC共享数据区描述符 */
+RT_HEAP sv_heap_desc;               /* 伺服映像数据共享区描述符 */
 
 RT_COND rc_cond_desc;               /* RC/PLC同步对象－－条件变量描述符 */
 RT_MUTEX rc_mutex_desc;             /* RC/PLC同步对象－－互斥量描述符 */
+RT_MUTEX sv_mutex_desc;             /* PLC/Servo同步对象－－互斥量描述符 */
 
 IOConfig *io_conf;                  /* I/O配置信息共享区指针 */
-IOMem io_shm;                       /* I/O映像区指针 */
-RCMem *rc_shm;                      /* RC/PLC共享区指针 */
 ServoConfig *sv_conf;               /* 伺服配置信息共享区指针 */
 RobotConfig *rc_conf;               /* 机器人配置信息共享区指针 */
+
+IOMem io_shm;                       /* I/O映像区指针 */
+SVMem *sv_shm;                      /* 伺服共享区指针 */
+RCMem *rc_shm;                      /* RC/PLC共享区指针 */
+
 TaskList plc_task;                  /* PLC任务列表 */
 
 pid_t io_pid, sv_pid, rc_pid;       /* I/O子任务，伺服子任务，RC子任务进程号 */
@@ -149,6 +154,10 @@ int main(int argc, char *argv[]) {
             io_mem_create(&io_shm, io_conf, M_SHARED);          /* 创建I/O映像区 */
             io_mem_zero(&io_shm, io_conf);                      /* I/O映像区初始化 */
 
+            sv_mem_create(sv_shm, sv_conf);                    /* 创建伺服映像区 */
+            sv_mem_init(sv_shm, sv_conf);                      /* 伺服映像区初始化（注意：暂时未实现，为空函数）*/
+            sv_syncobj_create(&sv_mutex_desc, SV_MUTEX_NAME);  /* 创建PLC/Servo同步对象 */
+
             rc_mem_create(rc_shm, rc_conf);                     /* 创建RC与PLC共享内存区 */
             rc_shm_servo_init(rc_shm);                          /* 对RC/PLC内存共享区进行初始化 */
             rc_syncobj_create(&rc_mutex_desc, RC_MUTEX_NAME, &rc_cond_desc, RC_COND_NAME);    /* 创建RC/PLC同步对象 */
@@ -162,11 +171,11 @@ int main(int argc, char *argv[]) {
             rt_task_bind(&sv_task, SV_TASK_NAME, TM_INFINITE);  /* 任务描述符sv_task绑定伺服驱动子任务 */
             rt_task_bind(&rc_task, RC_TASK_NAME, TM_INFINITE);  /* 任务描述符rc_task绑定RC子任务 */
 
-            rt_task_create(&test_desc, "test_task", 0, 88, T_CPU(0));
-            rt_task_start(&test_desc, &test_routine, NULL);
+            // rt_task_create(&test_desc, "test_task", 0, 88, T_CPU(0));
+            // rt_task_start(&test_desc, &test_routine, NULL);
 
-            // plc_task_init(&plc_task);                           /* 初始化plc任务 */
-            // plc_task_start(&plc_task);                          /* 启动plc任务 */
+            plc_task_init(&plc_task);                           /* 初始化plc任务 */
+            plc_task_start(&plc_task);                          /* 启动plc任务 */
         }
     }
     return 0;

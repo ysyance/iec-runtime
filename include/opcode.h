@@ -76,10 +76,12 @@ typedef enum {
     OP_TP,
     OP_TON,
     OP_TOF,
+    OP_PGLOAD,
+    OP_PGSTORE,
 } OpCode;
 
 #define MIN_OPCODE OP_GLOAD
-#define MAX_OPCODE OP_TOF
+#define MAX_OPCODE OP_PGSTORE // !!!!!!!!!!!!!!!!
 /*-----------------------------------------------------------------------------
  * Instructoin Decoder Macro
  * Note: decoder won't change original instruction!
