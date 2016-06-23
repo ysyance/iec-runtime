@@ -120,7 +120,8 @@ inline void sv_mem_create(SVMem *&svmem, ServoConfig *config) {
 
 inline void sv_mem_init(SVMem *&svmem, ServoConfig *config){
 	/* TODO */
-	svmem->axis_count = config->axis_count;
+	// svmem->axis_count = config->axis_count;   /* 目前测试阶段以6轴为例，不采用此句 */
+	svmem->axis_count = 6;
 }
 
 inline void sv_mem_bind(SVMem *&svmem, ServoConfig *config) {
@@ -170,7 +171,7 @@ inline void sv_syncobj_bind(RT_MUTEX *mutex_desc, const char* mutex_name){
  *---------------------------------------------------------------------------*/
 inline void sv_shm_plc2servo(SVMem *sv_shm, RobotInterpData *axis_command_info){
 	rt_mutex_acquire(&sv_mutex_desc, TM_INFINITE);      /* 获得同步互斥量 */
-	for(int i = 0; i < sv_shm->axis_count; i ++){
+    for(int i = 0; i < sv_shm->axis_count; i ++){
 		sv_shm->axis_data[i].command_pos = axis_command_info->interp_value[i].command_pos;
 		sv_shm->axis_data[i].command_vel = axis_command_info->interp_value[i].command_vel;
 		sv_shm->axis_data[i].command_acc = axis_command_info->interp_value[i].command_acc;

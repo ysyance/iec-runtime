@@ -45,21 +45,41 @@ int main(int argc, char *argv[]){
 	}
 
 	while(1){
+
 		sin_size = sizeof(struct sockaddr_in);
 		if((new_fd = accept(sockfd, (struct sockaddr*)(&client_addr),(socklen_t*)&sin_size)) == -1){
 			fprintf(stderr, "Accept error: %s\n\a", strerror(errno));
 			exit(1);
-		}
-		fprintf(stderr, "Server get connection from %s: ", inet_ntoa(client_addr.sin_addr));
+		} else {
+            fprintf(stderr, "Server get connection from %s: ", inet_ntoa(client_addr.sin_addr));
 
-		int nbytes = read(new_fd, buffer, 1024);
-		buffer[nbytes] = '\0';
-		fprintf(stderr, "%d bytes. ==> \n", nbytes);
-		for(int i = 0; i < nbytes; i ++){
-			fprintf(stderr, " %d ", buffer[i]);
-		}
-		fprintf(stderr, "\n");
-		close(new_fd);
+            pid_t pid = fork();
+            if(pid < 0){
+                break;
+            } else if(pid == 0){
+                printf("child process start ...\n");
+                while(1){
+                    double *data;
+                    int nbytes = read(new_fd, buffer, 48);
+            		fprintf(stderr, "%d bytes. ==> \n", nbytes);
+                    if(nbytes == 0){
+                        printf("child process exit ...\n");
+                        exit(0);
+                    }
+                    data = (double*)buffer;
+
+            		for(int i = 0; i < 6; i ++){
+            			fprintf(stderr, " %9.6f ", *(data + i));
+            		}
+
+            		fprintf(stderr, "\n");
+                }
+            } else {
+                continue;
+            }
+
+        }
+
 	}
 
 	close(sockfd);
