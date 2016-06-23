@@ -57,31 +57,31 @@ static inline void servo_mocker_init(){
 	if(connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0){
 		LOGGER_ERR(E_SOCK_CONNECT, " while connecting ethercat ...");
 	} else {
-		printf("EtheCAT has connected !\n");
+		LOGGER_INF("EtheCAT has connected !", 0);
 	}
 }
 
 static inline void servo_mocker(SVMem *sv_shm, ServoConfig *sv_conf){
 	double send_addr[6];
-	char ch[120] = {0};
+	char ch[121] = {0};
 	rt_mutex_acquire(&sv_mutex_desc, TM_INFINITE);      /* 获得同步互斥量 */
 	for(int i = 0; i < 6; i ++){
 		send_addr[i] = sv_shm->axis_data[i].command_pos;
 
-		// sprintf(&ch[i*20], "%f", send_addr[i]);
-		// if(i != 5)
-		// 	ch[(i+1)*20-1] = ':';
-		// printf("%s ", ch[i*20]);
+		gcvt(send_addr[i], 10, &ch[i*20]);
+		if(i != 5)
+			ch[(i+1)*20-1] = ':';
 	}
 	rt_mutex_release(&sv_mutex_desc);           		/* 释放同步互斥量 */
-	// printf("\n");
+	ch[120] = '\n';
 
-	if(write(sockfd, (char*)send_addr, 8 * 6) < 0){
-		LOGGER_DBG(DFLAG_SHORT, "lost one socket data frame while sending");
-	}
-	// if(write(sockfd, ch, 120) < 0){
+	// if(write(sockfd, (char*)send_addr, 8 * 6) < 0){
 	// 	LOGGER_DBG(DFLAG_SHORT, "lost one socket data frame while sending");
 	// }
+
+	if(write(sockfd, ch, 121) < 0){
+		LOGGER_DBG(DFLAG_SHORT, "lost one socket data frame while sending");
+	}
 }
 
 /* realtime context */
@@ -99,8 +99,8 @@ static void servo_update(void *cookie) {
 	while (1) {
 		rt_task_wait_period(NULL);
 		servo_mocker(sv_shm, sv_conf);
-        if(i ++ == 1000)
-            LOGGER_INF("STUB: Update servo data...", 0);
+
+        LOGGER_INF("STUB: Update servo data...", 0);
 	}
 }
 

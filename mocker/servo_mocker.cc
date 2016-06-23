@@ -71,6 +71,8 @@ int main(int argc, char *argv[]){
             		for(int i = 0; i < 6; i ++){
             			fprintf(stderr, " %9.6f ", *(data + i));
             		}
+            		// buffer[nbytes - 1] = '\0';
+            		// fprintf(stderr, "%s\n", buffer);
 
             		fprintf(stderr, "\n");
                 }

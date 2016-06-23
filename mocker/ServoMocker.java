@@ -22,8 +22,8 @@ public class ServoMocker{
                         PrintStream out = new PrintStream(client.getOutputStream());
                         while(runFlag){
                             if(scan.hasNext()){
-                                double[] realVal = new double[6];
                                 String str = scan.next();
+                                // System.out.println(str);
                                 String[] val = str.split(":");
                                 for(int i = 0; i < 6; i ++){
                                     // realVal[i] = (double)val[i*8];
